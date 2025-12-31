@@ -10,6 +10,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
 #[ORM\Entity]
 class Commande
 {
+    // ----------------- Champs -----------------
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -45,9 +46,138 @@ class Commande
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $updatedAt = null;
 
-
+    // ----------------- Constructor -----------------
     public function __construct()
     {
         $this->ligneCommandes = new ArrayCollection();
+        $this->dateCommande = new \DateTime();
+        $this->total = 0;
+        $this->statut = 'en_attente';
+    }
+
+    // ----------------- Getters / Setters -----------------
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getDateCommande(): \DateTimeInterface
+    {
+        return $this->dateCommande;
+    }
+
+    public function setDateCommande(\DateTimeInterface $dateCommande): self
+    {
+        $this->dateCommande = $dateCommande;
+        return $this;
+    }
+
+    public function getTotal(): float
+    {
+        return $this->total;
+    }
+
+    public function setTotal(float $total): self
+    {
+        $this->total = $total;
+        return $this;
+    }
+
+    public function getStatut(): string
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(string $statut): self
+    {
+        $this->statut = $statut;
+        return $this;
+    }
+
+    // ----------------- Relations -----------------
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, LigneCommande>
+     */
+    public function getLigneCommandes(): Collection
+    {
+        return $this->ligneCommandes;
+    }
+
+    public function addLigneCommande(LigneCommande $ligneCommande): self
+    {
+        if (!$this->ligneCommandes->contains($ligneCommande)) {
+            $this->ligneCommandes->add($ligneCommande);
+            $ligneCommande->setCommande($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLigneCommande(LigneCommande $ligneCommande): self
+    {
+        if ($this->ligneCommandes->removeElement($ligneCommande)) {
+            if ($ligneCommande->getCommande() === $this) {
+                $ligneCommande->setCommande(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getPaiement(): ?Paiement
+    {
+        return $this->paiement;
+    }
+
+    public function setPaiement(?Paiement $paiement): self
+    {
+        $this->paiement = $paiement;
+
+        if ($paiement && $paiement->getCommande() !== $this) {
+            $paiement->setCommande($this);
+        }
+
+        return $this;
+    }
+
+    public function getLivraison(): ?Livraison
+    {
+        return $this->livraison;
+    }
+
+    public function setLivraison(?Livraison $livraison): self
+    {
+        $this->livraison = $livraison;
+
+        if ($livraison && $livraison->getCommande() !== $this) {
+            $livraison->setCommande($this);
+        }
+
+        return $this;
+    }
+
+    // ----------------- Timestamps -----------------
+
+    public function getCreatedAt(): ?\DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
     }
 }
