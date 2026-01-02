@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello HomeController!{% endblock %}
+
+{% block body %}
+    <h1>Welcome to the Home Page</h1>
+      {% if app.user %}
+            <p>
+                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
+            </p>
+        {% else %}
+            <p>
+               <a href="{{ path('app_register') }}">Register</a> or 
+               <a href="{{ path('app_login') }}">Login In</a>
+            </p>
+        {% endif %}
+{% endblock %}
