@@ -1,17 +1,233 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello HomeController!{% endblock %}
+{% block title %}Accueil | BiblioHub{% endblock %}
+
+{% block stylesheets %}
+<style>
+    body {
+        background-color: #f8f6f2;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .navbar {
+        background-color: #4e342e;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .navbar-brand {
+        font-size: 20px;
+        font-weight: bold;
+        color: #f5f5dc;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .navbar-content {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .navbar a {
+        color: #f5f5dc;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .navbar a:hover {
+        color: #fff;
+        text-decoration: underline;
+    }
+
+    .user-greeting {
+        color: #f5f5dc;
+        font-weight: 500;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .hero {
+        background: linear-gradient(135deg, rgba(78,52,46,0.9), rgba(141,110,99,0.85));
+        color: #f5f5dc;
+        padding: 80px 40px;
+        text-align: center;
+        border-radius: 16px;
+        margin-top: 60px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        font-weight: 700;
+    }
+
+    .hero p {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        line-height: 1.6;
+    }
+
+    .btn-biblio {
+        background-color: #8d6e63;
+        color: white;
+        padding: 14px 30px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .btn-biblio:hover {
+        background-color: #6d4c41;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .user-info {
+        background-color: rgba(255,255,255,0.1);
+        padding: 15px 25px;
+        border-radius: 8px;
+        margin-top: 30px;
+        display: inline-block;
+        text-align: left;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .navbar {
+            flex-direction: column;
+            gap: 15px;
+            padding: 15px;
+        }
+
+        .navbar-content {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .hero {
+            padding: 60px 20px;
+            margin-top: 40px;
+        }
+
+        .hero h1 {
+            font-size: 2rem;
+        }
+
+        .hero p {
+            font-size: 1rem;
+        }
+    }
+
+    .profile-img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #f5f5dc;
+    }
+</style>
+{% endblock %}
 
 {% block body %}
-    <h1>Welcome to the Home Page</h1>
-      {% if app.user %}
-            <p>
-                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
-            </p>
+<!-- NAVBAR -->
+<nav class="navbar" role="navigation" aria-label="Navigation principale">
+    <div class="navbar-brand">
+        <span>📚</span>
+        <span>BiblioHub</span>
+    </div>
+    
+    <div class="navbar-content">
+        {% if app.user %}
+            <span class="user-greeting">
+                Bonjour {{ app.user.nom }}
+            </span>
+            <a href="{{ path('app_logout') }}">Déconnexion</a>
         {% else %}
-            <p>
-               <a href="{{ path('app_register') }}">Register</a> or 
-               <a href="{{ path('app_login') }}">Login In</a>
-            </p>
+            <a href="{{ path('app_login') }}">Connexion</a>
         {% endif %}
+    </div>
+</nav>
+
+<!-- HERO SECTION -->
+<div class="container">
+    <section class="hero" role="main">
+        <h1>Bienvenue sur BiblioHub</h1>
+        <p>
+            Votre bibliothèque en ligne pour découvrir et gérer vos livres 📖
+        </p>
+
+        {% if app.user %}
+            <div class="user-info">
+                <p>Connecté en tant que <strong>{{ app.user.email }}</strong></p>
+                {% if 'ROLE_ADMIN' in app.user.roles %}
+                    <p style="margin-top: 10px;">
+                        <span style="background-color: #ff6b6b; padding: 4px 10px; border-radius: 4px; font-size: 0.9rem;">
+                            👑 Administrateur
+                        </span>
+                    </p>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 30px;">
+                <a href="{{ path('app_login') }}" class="btn-biblio">
+                    Explorer la bibliothèque
+                </a>
+            </div>
+        {% else %}
+            <a href="{{ path('app_login') }}" class="btn-biblio">
+                Se connecter / S'inscrire
+            </a>
+        {% endif %}
+    </section>
+
+    {% if not app.user %}
+    <!-- Pourquoi rejoindre BiblioHub -->
+    <section style="margin-top: 60px; text-align: center; padding-bottom: 60px;">
+        <h2 style="color: #4e342e; margin-bottom: 40px; font-size: 2rem;">
+            Pourquoi rejoindre BiblioHub ?
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="font-size: 3rem; margin-bottom: 15px;">📚</div>
+                <h3 style="color: #4e342e; margin-bottom: 10px;">Large catalogue</h3>
+                <p style="color: #666;">Découvrez des milliers de livres</p>
+            </div>
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="font-size: 3rem; margin-bottom: 15px;">🔖</div>
+                <h3 style="color: #4e342e; margin-bottom: 10px;">Gestion facile</h3>
+                <p style="color: #666;">Gérez vos emprunts en ligne</p>
+            </div>
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="font-size: 3rem; margin-bottom: 15px;">⚡</div>
+                <h3 style="color: #4e342e; margin-bottom: 10px;">Rapide et simple</h3>
+                <p style="color: #666;">Interface intuitive et moderne</p>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</div>
 {% endblock %}

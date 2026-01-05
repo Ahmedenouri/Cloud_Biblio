@@ -20,10 +20,6 @@ class Livre
     #[ORM\Column(length: 255)]
     private ?string $titre = null;
 
-    #[Gedmo\Slug(fields: ['titre'])]
-    #[ORM\Column(length: 255, unique: true)]
-    private ?string $slug = null;
-
     #[ORM\Column(type: 'text')]
     private ?string $description = null;
 
@@ -36,9 +32,11 @@ class Livre
     #[ORM\Column(nullable: true)]
     private ?int $stock = null;
 
-    #[ORM\ManyToOne(inversedBy: 'livres')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Category $categorie = null;
+    #[ORM\Column(length: 255)]
+    private ?string $categorie = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null; // nom du fichier image
 
     #[ORM\OneToMany(mappedBy: 'livre', targetEntity: Emprunt::class)]
     private Collection $emprunts;
@@ -65,6 +63,7 @@ class Livre
     }
 
     // ----------------- Getters / Setters -----------------
+
     public function getId(): ?int
     {
         return $this->id;
@@ -79,11 +78,6 @@ class Livre
     {
         $this->titre = $titre;
         return $this;
-    }
-
-    public function getSlug(): ?string
-    {
-        return $this->slug;
     }
 
     public function getDescription(): ?string
@@ -130,17 +124,30 @@ class Livre
         return $this;
     }
 
-    public function getCategorie(): ?Category
+    public function getCategorie(): ?string
     {
         return $this->categorie;
     }
 
-    public function setCategorie(?Category $categorie): self
+    public function setCategorie(?string $categorie): self
     {
         $this->categorie = $categorie;
         return $this;
     }
 
+    // ---------- Image ----------
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): self
+    {
+        $this->image = $image;
+        return $this;
+    }
+
+    // ---------- PDF ----------
     public function getPdf(): ?LivrePdf
     {
         return $this->pdf;
@@ -157,6 +164,7 @@ class Livre
         return $this;
     }
 
+    // ---------- Dates ----------
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->createdAt;
@@ -167,7 +175,7 @@ class Livre
         return $this->updatedAt;
     }
 
-    // ----------------- Collections -----------------
+    // ---------- Collections ----------
     /** @return Collection<int, Emprunt> */
     public function getEmprunts(): Collection
     {

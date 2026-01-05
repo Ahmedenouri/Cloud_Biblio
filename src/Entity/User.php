@@ -37,6 +37,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'boolean')]
     private bool $isVerified = false;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $profile = null;
+
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Commande::class)]
     private Collection $commandes;
 
@@ -48,11 +51,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[Gedmo\Timestampable(on: 'create')]
     #[ORM\Column(type: 'datetime')]
-    private ?\DateTimeInterface $createdAt = null;
+    private \DateTimeInterface $createdAt;
 
     #[Gedmo\Timestampable(on: 'update')]
     #[ORM\Column(type: 'datetime')]
-    private ?\DateTimeInterface $updatedAt = null;
+    private \DateTimeInterface $updatedAt;
 
     // ----------------- Constructeur -----------------
     public function __construct()
@@ -61,6 +64,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->emprunts = new ArrayCollection();
         $this->empruntsValides = new ArrayCollection();
         $this->roles = ['ROLE_USER'];
+        $this->profile = 'default.png';
         $this->createdAt = new \DateTime();
         $this->updatedAt = new \DateTime();
     }
@@ -74,7 +78,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        $roles[] = 'ROLE_USER'; // rôle par défaut
+        $roles[] = 'ROLE_USER';
         return array_unique($roles);
     }
 
@@ -97,7 +101,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
-        // Efface les données temporaires sensibles si nécessaire
+        // Rien à effacer
     }
 
     public function isVerified(): bool
@@ -137,6 +141,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->email = $email;
         return $this;
+    }
+
+    public function getProfile(): ?string
+    {
+        return $this->profile;
+    }
+
+    public function setProfile(?string $profile): self
+    {
+        $this->profile = $profile;
+        return $this;
+    }
+
+    public function getCreatedAt(): \DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): \DateTimeInterface
+    {
+        return $this->updatedAt;
     }
 
     // ----------------- Collections -----------------

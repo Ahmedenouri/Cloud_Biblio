@@ -1,50 +1,71 @@
 security:
-    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    # Encodage des mots de passe
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
-    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    # Fournisseur d'utilisateurs
     providers:
         app_user_provider:
             entity:
                 class: App\Entity\User
                 property: email
 
+    # Pare-feu
     firewalls:
         dev:
-            # Ensure dev tools and static assets are always allowed
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
+
         main:
             lazy: true
             provider: app_user_provider
+
+            # Configuration du formulaire de login
             form_login:
                 login_path: app_login
                 check_path: app_login
+                username_parameter: _username
+                password_parameter: _password
                 enable_csrf: true
+                csrf_parameter: _csrf_token
+                csrf_token_id: authenticate
+                default_target_path: app_home
+                always_use_default_target_path: false  # ← Changé pour permettre les redirections personnalisées
+                # Si vous voulez gérer les échecs de connexion
+                # failure_path: app_login
+                # failure_forward: false
+
+            # Configuration du logout
             logout:
                 path: app_logout
-                # where to redirect after logout
-                # target: app_any_route
+                target: app_login
+                # Invalider la session lors de la déconnexion
+                invalidate_session: true
+                # Effacer les cookies
+                # delete_cookies:
+                #     PHPSESSID: { path: /, domain: null }
 
-            # Activate different ways to authenticate:
-            # https://symfony.com/doc/current/security.html#the-firewall
+            # Se souvenir de moi (optionnel mais recommandé)
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800  # 1 semaine en secondes
+                path: /
+                always_remember_me: false
 
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
-
-    # Note: Only the *first* matching rule is applied
+    # Contrôle d'accès
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        # Routes publiques (accessibles sans authentification)
+        - { path: ^/login$, roles: PUBLIC_ACCESS }
+        - { path: ^/register$, roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: PUBLIC_ACCESS }  # Page d'accueil publique
+        
+        # Routes protégées pour les administrateurs
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        
+        # Toutes les autres routes nécessitent une authentification
+        # - { path: ^/, roles: ROLE_USER }
 
-when@test:
-    security:
-        password_hashers:
-            # Password hashers are resource-intensive by design to ensure security.
-            # In tests, it's safe to reduce their cost to improve performance.
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
-                cost: 4 # Lowest possible value for bcrypt
-                time_cost: 3 # Lowest possible value for argon
-                memory_cost: 10 # Lowest possible value for argon
+    # Hiérarchie des rôles
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_USER]
+        ROLE_BIBLIOTHECAIRE: [ROLE_USER]
