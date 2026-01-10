@@ -8,6 +8,7 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -24,16 +25,25 @@ class UserController extends AbstractController
     }
 
     #[Route('/new', name: 'admin_user_new')]
-    public function new(Request $request, EntityManagerInterface $em)
+    public function new(Request $request, EntityManagerInterface $em,UserPasswordHasherInterface $hasher)
     {
         $user = new User();
         $form = $this->createForm(UserAdminType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Récupérer le mot de passe saisi
+            $plainPassword = $form->get('password')->getData();
+            
+
+            if ($plainPassword) {
+                $hashedPassword = $hasher->hashPassword($user, $plainPassword);
+                $user->setPassword($hashedPassword);
+            }
             $em->persist($user);
             $em->flush();
 
+            $this->addFlash('success', 'Utilisateur créé avec succès.');
             return $this->redirectToRoute('admin_user_index');
         }
 
@@ -43,13 +53,19 @@ class UserController extends AbstractController
     }
 
     #[Route('/edit/{id}', name: 'admin_user_edit')]
-    public function edit(User $user, Request $request, EntityManagerInterface $em)
+    public function edit(User $user, Request $request, EntityManagerInterface $em,UserPasswordHasherInterface $hasher)
     {
         $form = $this->createForm(UserAdminType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $plainPassword = $form->get('password')->getData();
+            if ($plainPassword) {
+                $hashedPassword = $hasher->hashPassword($user, $plainPassword);
+                $user->setPassword($hashedPassword);
+        }
             $em->flush();
+            $this->addFlash('success', 'Utilisateur modifié avec succès.');
             return $this->redirectToRoute('admin_user_index');
         }
 
