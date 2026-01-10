@@ -23,8 +23,9 @@ class Livre
     #[ORM\Column(type: 'text')]
     private ?string $description = null;
 
-    #[ORM\Column]
-    private float $prix;
+    #[ORM\Column(type: 'float')]
+    private ?float $prix = null;
+
 
     #[ORM\Column(length: 20)]
     private string $type; // physique | pdf
@@ -169,10 +170,20 @@ class Livre
     {
         return $this->createdAt;
     }
+    public function setCreatedAt(\DateTimeInterface $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+        return $this;
+    }
 
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updatedAt;
+    }
+    public function setUpdatedAt(\DateTimeInterface $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+        return $this;
     }
 
     // ---------- Collections ----------

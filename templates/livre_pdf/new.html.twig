@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New LivrePdf{% endblock %}
+
+{% block body %}
+    <h1>Create new LivrePdf</h1>
+
+    {{ include('livre_pdf/_form.html.twig') }}
+
+    <a href="{{ path('app_livre_pdf_index') }}">back to list</a>
+{% endblock %}

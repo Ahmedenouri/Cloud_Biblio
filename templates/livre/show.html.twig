@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Livre{% endblock %}
+
+{% block body %}
+    <h1>Livre</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ livre.id }}</td>
+            </tr>
+            <tr>
+                <th>Titre</th>
+                <td>{{ livre.titre }}</td>
+            </tr>
+            <tr>
+                <th>Description</th>
+                <td>{{ livre.description }}</td>
+            </tr>
+            <tr>
+                <th>Prix</th>
+                <td>{{ livre.prix }}</td>
+            </tr>
+            <tr>
+                <th>Type</th>
+                <td>{{ livre.type }}</td>
+            </tr>
+            <tr>
+                <th>Stock</th>
+                <td>{{ livre.stock }}</td>
+            </tr>
+            <tr>
+                <th>Categorie</th>
+                <td>{{ livre.categorie }}</td>
+            </tr>
+            <tr>
+                <th>Image</th>
+                {% if livre.image %}
+                    <img src="{{ asset('uploads/images/' ~ livre.image) }}" alt="{{ livre.titre }}" style="max-width:200px;">
+                {% endif %}
+
+            </tr>
+            <tr>
+                <th>CreatedAt</th>
+                <td>{{ livre.createdAt ? livre.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>UpdatedAt</th>
+                <td>{{ livre.updatedAt ? livre.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <td>
+                    {% if livre.type == 'pdf' and livre.pdf %}
+                        <a href="{{ asset('uploads/pdf/' ~ livre.pdf.fichier) }}" target="_blank">
+                            📄 Télécharger le PDF
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_livre_index') }}">back to list</a>
+
+    <a href="{{ path('app_livre_edit', {'id': livre.id}) }}">edit</a>
+
+    {{ include('livre/_delete_form.html.twig') }}
+{% endblock %}
