@@ -1,166 +1,50 @@
 {% extends 'base.html.twig' %}
-
 {% block title %}Catalogue | BiblioHub{% endblock %}
 
-{% block stylesheets %}
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          biblio: {
-            dark: '#8B5E3C',      /* Marron foncé */
-            light: '#F5F1E6',     /* Beige clair */
-            accent: '#A67C52',    /* Marron clair */
-            text: '#F5F1E6',
-          }
-        }
-      }
-    }
-  }
-</script>
-{% endblock %}
-
 {% block body %}
-<div class="min-h-screen bg-biblio-light font-sans text-gray-800">
+<div class="max-w-7xl mx-auto px-6 py-10">
+    <div class="flex justify-between items-center mb-8 border-b border-gray-300 pb-4">
+        <h1 class="text-3xl font-bold text-biblio-dark">Catalogue</h1>
+        {# Bouton Ajout pour le Staff #}
+        {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
+            <a href="{{ path('app_livre_new') }}" class="bg-biblio-dark text-white px-4 py-2 rounded shadow">+ Ajouter</a>
+        {% endif %}
+    </div>
 
-    <nav class="bg-biblio-dark px-8 py-4 shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-2 text-biblio-text text-xl font-bold">
-                <span class="text-2xl">📚</span>
-                <span>BiblioHub</span>
-            </div>
-            
-            <div class="flex items-center gap-6 text-biblio-text font-medium">
-                {% if app.user %}
-                    <span class="opacity-90">Bonjour {{ app.user.nom }}</span>
-                    <a href="{{ path('app_logout') }}" class="hover:text-white hover:underline transition-colors">Déconnexion</a>
-                {% else %}
-                    <a href="{{ path('app_login') }}" class="hover:text-white hover:underline transition-colors">Connexion</a>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
-
-    <div class="max-w-7xl mx-auto px-6 py-10">
-        
-        <div class="flex justify-between items-center mb-8 border-b border-gray-300 pb-4">
-            <h1 class="text-3xl font-bold text-biblio-dark">Catalogue des Livres</h1>
-            
-            {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
-                <a href="{{ path('app_livre_new') }}" class="bg-biblio-dark hover:bg-biblio-accent text-biblio-light px-5 py-2 rounded-lg shadow transition-colors flex items-center gap-2 font-semibold">
-                    <span>+</span> Ajouter un livre
-                </a>
-            {% endif %}
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {% for livre in livres %}
-                <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 flex flex-col h-full border border-gray-100 group">
-                    
-                    <div class="relative h-64 bg-gray-100 overflow-hidden">
-                        {% if livre.image %}
-                            <img src="{{ asset('uploads/images/' ~ livre.image) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="{{ livre.titre }}">
-                        {% else %}
-                            <div class="w-full h-full flex items-center justify-center text-gray-400 bg-biblio-light">
-                                <span class="text-sm">Pas d'image</span>
-                            </div>
-                        {% endif %}
-                        
-                        <div class="absolute top-3 left-3">
-                            {% if livre.stock > 0 %}
-                                <span class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md uppercase tracking-wider">
-                                    📦 Stock: {{ livre.stock }}
-                                </span>
-                            {% else %}
-                                <span class="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md uppercase tracking-wider">
-                                    🚫 Rupture
-                                </span>
-                            {% endif %}
-                        </div>
-
-                        <div class="absolute bottom-3 right-3">
-                            <span class="bg-white text-biblio-dark px-3 py-1 rounded-lg text-sm font-bold shadow-md">
-                                {{ livre.prix }} MAD
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="p-6 flex flex-col flex-grow bg-white">
-                        <div class="flex justify-between items-start mb-2">
-                            <h5 class="text-xl font-bold text-biblio-dark line-clamp-1" title="{{ livre.titre }}">{{ livre.titre }}</h5>
-                        </div>
-                        <p class="text-gray-500 text-xs uppercase font-bold mb-3">{{ livre.categorie }}</p>
-                        
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
-                            {{ livre.description }}
-                        </p>
-                        
-                        <div class="mt-auto pt-4 border-t border-gray-100 space-y-3">
-                            
-                            {# 1. BOUTON PDF (Toujours visible si PDF existe) #}
-                            {% if livre.pdf %}
-                                <a href="{{ path('app_livre_download', {'id': livre.id}) }}" target="_blank" class="block w-full text-center bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 rounded-lg shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
-                                    <span>📥</span> Télécharger PDF
-                                </a>
-                            {% endif %}
-
-                            {# 2. BOUTONS PHYSIQUES (Seulement si Stock > 0) #}
-                            {% if livre.stock > 0 %}
-                                <div class="grid grid-cols-2 gap-3">
-                                    {% if app.user %}
-                                        <a href="{{ path('app_livre_emprunt', {'id': livre.id}) }}" class="bg-biblio-dark hover:bg-biblio-accent text-white text-center py-2 rounded-lg font-semibold text-sm transition-colors">
-                                            📖 Emprunter
-                                        </a>
-                                    {% else %}
-                                        <a href="{{ path('app_login') }}" class="bg-biblio-dark hover:bg-biblio-accent text-white text-center py-2 rounded-lg font-semibold text-sm transition-colors">
-                                            📖 Emprunter
-                                        </a>
-                                    {% endif %}
-
-                                    <button class="border-2 border-biblio-dark text-biblio-dark hover:bg-biblio-light font-semibold py-2 rounded-lg text-sm transition-colors">
-                                        🛒 Acheter
-                                    </button>
-                                </div>
-                            {% else %}
-                                <div class="w-full bg-red-50 border border-red-200 text-red-600 text-center py-2 rounded-lg text-xs font-bold">Indisponible pour le moment
-                                </div>
-                            {% endif %}
-
-                            {# 3. ACTIONS ADMIN (Visible seulement pour le bibliothécaire) #}
-                            {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
-                                <div class="flex justify-between items-center mt-3 pt-3 border-t border-dashed border-gray-200">
-                                    <a href="{{ path('app_livre_edit', {'id': livre.id}) }}" class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors">
-                                        ✏️ Modifier
-                                    </a>
-                                    {# Note: Assurez-vous d'avoir une méthode de suppression sécurisée (formulaire) #}
-                                    <form method="post" action="{{ path('app_livre_delete', {'id': livre.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce livre ?');" class="inline">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ livre.id) }}">
-                                        <button class="text-red-500 hover:text-red-700 text-xs font-semibold transition-colors">
-                                            🗑️ Supprimer
-                                        </button>
-                                    </form>
-                                </div>
-                            {% endif %}
-
-                        </div>
-                    </div>
-                </div>
-            {% else %}
-                {# État vide si la boucle "livres" ne contient rien #}
-                <div class="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center py-16 text-gray-400 bg-white rounded-xl border-2 border-dashed border-gray-200">
-                    <span class="text-6xl mb-4">📚</span>
-                    <h3 class="text-xl font-bold text-gray-600">Le catalogue est vide</h3>
-                    <p class="text-sm mt-2">Aucun livre n'a été trouvé pour le moment.</p>
-                    {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
-                        <a href="{{ path('app_livre_new') }}" class="mt-4 text-biblio-dark font-bold hover:underline">
-                            Ajouter le premier livre
-                        </a>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for livre in livres %}
+            <div class="bg-white rounded-xl shadow-lg hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full group">
+                
+                <div class="relative h-64 bg-gray-100 overflow-hidden">
+                    {% if livre.image %}
+                        <img src="{{ asset('uploads/images/' ~ livre.image) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-gray-400">Pas d'image</div>
                     {% endif %}
+                    
+                    <div class="absolute top-2 left-2 flex flex-col gap-1">
+                        {% if livre.stock > 0 %}
+                            <span class="bg-green-500 text-white px-2 py-1 rounded text-xs font-bold shadow">Stock: {{ livre.stock }}</span>
+                        {% else %}
+                            <span class="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold shadow">Rupture</span>
+                        {% endif %}
+                    </div>
+                    <span class="absolute bottom-2 right-2 bg-white text-biblio-dark px-2 py-1 rounded text-sm font-bold shadow">{{ livre.prix }} MAD</span>
                 </div>
-            {% endfor %}
-        </div>
+
+                <div class="p-6 flex flex-col flex-grow">
+                    <h5 class="text-xl font-bold text-biblio-dark mb-1 line-clamp-1">{{ livre.titre }}</h5>
+                    <p class="text-xs uppercase font-bold text-gray-400 mb-3">{{ livre.categorie }}</p>
+                    <p class="text-gray-600 text-sm line-clamp-3 mb-6 flex-grow">{{ livre.description }}</p>
+
+                    <a href="{{ path('app_livre_show', {'id': livre.id}) }}" class="w-full block text-center bg-biblio-light text-biblio-dark border border-biblio-dark/30 hover:bg-biblio-dark hover:text-white font-bold py-3 rounded-lg transition-colors">
+                        Voir les options
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-span-full text-center py-10 text-gray-500">Aucun livre disponible.</div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

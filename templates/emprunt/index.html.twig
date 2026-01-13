@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Emprunts{% endblock %}
+
+{% block body %}
+<div class="max-w-7xl mx-auto px-6 py-10 min-h-screen">
+    <h1 class="text-3xl font-bold text-biblio-dark mb-8">Gestion des Emprunts (Staff)</h1>
+
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Utilisateur</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Livre</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Statut</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for emprunt in emprunts %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {{ emprunt.dateEmprunt|date('d/m/Y') }}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-bold text-gray-700">
+                            {{ emprunt.user.nom }} <br>
+                            <span class="text-xs text-gray-400 font-normal">{{ emprunt.user.email }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ emprunt.livre.titre }}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            {% if emprunt.statut == 'EN_ATTENTE' %}
+                                <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded">En attente</span>
+                            {% elseif emprunt.statut == 'VALIDE' %}
+                                <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">Validé</span>
+                            {% elseif emprunt.statut == 'REFUSE' %}
+                                <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">Refusé</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right text-sm font-medium">
+                            {% if emprunt.statut == 'EN_ATTENTE' %}
+                                <a href="{{ path('app_emprunt_valider', {'id': emprunt.id}) }}" class="text-green-600 hover:text-green-900 mr-3 font-bold">Valider</a>
+                                <a href="{{ path('app_emprunt_refuser', {'id': emprunt.id}) }}" class="text-red-600 hover:text-red-900 font-bold" onclick="return confirm('Refuser cet emprunt ?')">Refuser</a>
+                            {% else %}
+                                <span class="text-gray-400 text-xs">Traité par {{ emprunt.bibliothecaire ? emprunt.bibliothecaire.nom : 'Système' }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">Aucune demande d'emprunt.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

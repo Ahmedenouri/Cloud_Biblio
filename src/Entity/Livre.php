@@ -26,7 +26,6 @@ class Livre
     #[ORM\Column(type: 'float')]
     private ?float $prix = null;
 
-
     #[ORM\Column(length: 20)]
     private string $type; // physique | pdf
 
@@ -235,5 +234,23 @@ class Livre
             }
         }
         return $this;
+    }
+
+    // ----------------------------------------------------
+    //  NOUVELLE MÉTHODE AJOUTÉE (Pas besoin de migration)
+    // ----------------------------------------------------
+    
+    /**
+     * Calcule le prix de la version PDF (Réduction de 30%)
+     */
+    public function getPrixPdf(): float
+    {
+        if ($this->prix === null) {
+            return 0.0;
+        }
+        
+        // On prend le prix normal et on le multiplie par 0.7 (70% du prix = -30%)
+        // La fonction round(..., 2) arrondit à 2 chiffres après la virgule
+        return round($this->prix * 0.7, 2); 
     }
 }

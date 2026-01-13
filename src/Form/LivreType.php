@@ -13,11 +13,16 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Validator\Constraints\NotBlank; // N'oublie pas cet import !
 
 class LivreType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        // On récupère le livre pour voir s'il a déjà un PDF (mode modification)
+        $livre = $builder->getData();
+        $hasPdf = $livre && $livre->getPdf() !== null;
+
         $builder
             ->add('titre', TextType::class, [
                 'label' => 'Titre du livre',
@@ -29,25 +34,16 @@ class LivreType extends AbstractType
             ])
             ->add('prix', MoneyType::class, [
                 'currency' => 'MAD',
-                'label' => 'Prix',
+                // On précise que c'est le prix papier
+                'label' => 'Prix Version Papier (MAD)', 
                 'attr' => ['class' => 'w-full border border-gray-300 p-2 rounded']
             ])
             
-            // TYPE : Sert à définir l'étiquette principale (Badge jaune ou bleu sur le site)
-            ->add('type', ChoiceType::class, [
-                'label' => 'Format principal (Affichage)',
-                'choices' => [
-                    'Livre Physique (Papier)' => 'physique',
-                    'Livre Numérique (PDF)' => 'pdf',
-                ],
-                'expanded' => true, // Boutons radio
-                'multiple' => false,
-                'attr' => ['class' => 'flex gap-6 mt-2 mb-4']
-            ])
+            // SUPPRESSION DU CHAMP 'TYPE' (Car tous les livres sont maintenant hybrides)
 
             ->add('stock', IntegerType::class, [
-                'label' => 'Stock (Nombre d\'exemplaires physiques)',
-                'required' => false,
+                'label' => 'Stock Physique',
+                'required' => true, // Le stock est requis pour la version papier
                 'attr' => ['class' => 'w-full border border-gray-300 p-2 rounded']
             ])
 
@@ -78,13 +74,15 @@ class LivreType extends AbstractType
                 'attr' => ['class' => 'w-full border border-gray-300 p-2 rounded bg-white']
             ])
 
-            // PDF : Toujours accessible pour upload
+            // PDF : OBLIGATOIRE (Si nouveau livre)
             ->add('pdfFile', FileType::class, [
-                'label' => 'Fichier PDF (Optionnel)',
+                'label' => 'Fichier PDF (Obligatoire)',
                 'mapped' => false,
-                'required' => false,
-                'help' => 'Vous pouvez ajouter un PDF même si le livre est vendu en physique.',
-                'constraints' => [
+                // Requis SEULEMENT s'il n'y a pas encore de PDF en base
+                'required' => !$hasPdf, 
+                'help' => 'La version PDF est vendue 30% moins chère automatiquement.',
+                'constraints' => $hasPdf ? [] : [
+                    new NotBlank(['message' => 'Veuillez uploader le PDF du livre (Obligatoire)']),
                     new File([
                         'maxSize' => '10M',
                         'mimeTypes' => ['application/pdf'],

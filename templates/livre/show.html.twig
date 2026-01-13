@@ -1,8 +1,9 @@
 {% extends 'base.html.twig' %}
+
 {% block title %}{{ livre.titre }}{% endblock %}
 
 {% block body %}
-<div class="min-h-screen bg-[#F5F1E6] py-10 px-6">
+<div class="min-h-screen py-10 px-6">
     <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
         
         <div class="md:w-1/3 bg-gray-100 relative min-h-[400px]">
@@ -11,52 +12,90 @@
             {% else %}
                 <div class="flex items-center justify-center h-full text-gray-400">Pas d'image</div>
             {% endif %}
-            
-            {% if livre.stock > 0 %}
-                <span class="absolute top-4 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">Stock: {{ livre.stock }}</span>
-            {% else %}
-                <span class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">Rupture</span>
-            {% endif %}
         </div>
 
         <div class="md:w-2/3 p-8 flex flex-col">
-            <h1 class="text-4xl font-bold text-[#8B5E3C] mb-2">{{ livre.titre }}</h1>
-            <p class="text-3xl font-bold text-[#A67C52] mb-4">{{ livre.prix }} MAD</p>
-            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs w-max mb-6">{{ livre.categorie }}</span>
-            
-            <p class="text-gray-600 mb-8 flex-grow">{{ livre.description }}</p>
-
-            <div class="mt-auto border-t pt-6">
-                {# ADMIN #}
-                {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
-                    <div class="mb-6 flex gap-3">
-                        <a href="{{ path('app_livre_edit', {'id': livre.id}) }}" class="bg-yellow-500 text-white px-4 py-2 rounded font-bold">Modifier</a>
-                        {{ include('livre/_delete_form.html.twig') }}
-                    </div>
-                {% endif %}
-
-                {# USER #}
-                {% if app.user %}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {% if livre.pdf %}
-                            <a href="{{ path('app_livre_download', {'id': livre.id}) }}" target="_blank" class="bg-cyan-600 text-white py-3 rounded-lg font-bold text-center">📥 Télécharger PDF</a>
-                        {% endif %}
-
-                        {% if livre.stock > 0 %}
-                            <a href="{{ path('app_livre_emprunt', {'id': livre.id}) }}" class="bg-[#8B5E3C] text-white py-3 rounded-lg font-bold text-center">📖 Emprunter</a>
-                            <button class="border-2 border-[#8B5E3C] text-[#8B5E3C] py-3 rounded-lg font-bold">🛒 Acheter</button>
-                        {% else %}
-                             <button disabled class="bg-gray-200 text-gray-400 py-3 rounded-lg font-bold cursor-not-allowed text-center">🚫 Stock Épuisé</button>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                        <a href="{{ path('app_login') }}" class="font-bold underline text-yellow-800">Connectez-vous</a> pour accéder aux livres.
-                    </div>
-                {% endif %}
+            <h1 class="text-4xl font-bold text-biblio-dark mb-2">{{ livre.titre }}</h1>
+            <div class="flex items-center gap-4 mb-6">
+                <span class="text-3xl font-bold text-biblio-accent">{{ livre.prix }} MAD</span>
+                <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold uppercase">{{ livre.categorie }}</span>
             </div>
             
-            <a href="{{ path('app_livre_index') }}" class="block mt-6 text-gray-400 hover:text-[#8B5E3C]">← Retour</a>
+            <h3 class="font-bold text-gray-700 uppercase text-sm mb-2">Description</h3>
+            <p class="text-gray-600 mb-8 leading-relaxed flex-grow text-justify">{{ livre.description }}</p>
+
+            {% if app.user %}
+                <div class="flex flex-col gap-4">
+                    
+                    {# --- 1. OPTION NUMÉRIQUE (PDF avec Prix Réduit) --- #}
+                    {% if livre.pdf %}
+                        <div class="bg-cyan-50 p-4 rounded-xl border border-cyan-100 shadow-sm">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="font-bold text-cyan-800 flex items-center gap-2">
+                                    <span>📱</span> Version Numérique (PDF)
+                                </h3>
+                                <div class="text-right">
+                                    <span class="block text-xs text-gray-400 line-through">{{ livre.prix }} MAD</span>
+                                    <span class="block font-bold text-xl text-cyan-700">{{ livre.prixPdf }} MAD</span>
+                                </div>
+                            </div>
+                            
+                            <a href="{{ path('app_cart_add', {'id': livre.id, 'type': 'pdf'}) }}" class="flex items-center justify-between bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-3 rounded-lg font-bold transition shadow-sm group">
+                                <span class="flex items-center gap-2">
+                                    <span>🛒</span> Acheter le PDF
+                                </span>
+                                <span class="text-xs bg-white/20 px-2 py-1 rounded group-hover:bg-white/30 font-bold">-30% Réduction</span>
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    {# --- 2. OPTIONS PHYSIQUES (Papier) --- #}
+                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h3 class="font-bold text-biblio-dark mb-4 text-lg flex items-center gap-2">
+                            <span>📦</span> Version Papier {% if livre.stock > 0 %}<span class="text-xs font-normal text-gray-500">(Stock: {{ livre.stock }})</span>{% endif %}
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 gap-3">
+                            {% if livre.stock > 0 %}
+                                {# Acheter #}
+                                <a href="{{ path('app_cart_add', {'id': livre.id, 'type': 'achat'}) }}" class="flex items-center justify-between border-2 border-biblio-dark text-biblio-dark hover:bg-biblio-dark hover:text-white px-4 py-3 rounded-lg font-bold transition group">
+                                    <span class="flex items-center gap-2">
+                                        <span>🛒</span> Acheter (Papier)
+                                    </span>
+                                    <span class="text-xs bg-biblio-dark/10 text-biblio-dark px-2 py-1 rounded group-hover:bg-white/20 group-hover:text-white">{{ livre.prix }} MAD</span>
+                                </a>
+
+                                {# Emprunter #}
+                                <a href="{{ path('app_cart_add', {'id': livre.id, 'type': 'emprunt'}) }}" class="flex items-center justify-between bg-biblio-dark hover:bg-biblio-accent text-white px-4 py-3 rounded-lg font-bold transition shadow-md group">
+                                    <span class="flex items-center gap-2">
+                                        <span>📖</span> Emprunter
+                                    </span>
+                                    <span class="text-xs bg-white/20 px-2 py-1 rounded group-hover:bg-white/30">Gratuit</span>
+                                </a>
+                            {% else %}
+                                <div class="w-full bg-red-50 border border-red-200 text-red-600 text-center py-3 rounded-lg font-bold flex items-center justify-center gap-2">
+                                    <span>🚫</span> Rupture de stock physique
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            {% else %}
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                    <p class="text-yellow-800">
+                        <a href="{{ path('app_login') }}" class="font-bold underline">Connectez-vous</a> pour accéder aux options.
+                    </p>
+                </div>
+            {% endif %}
+
+            {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
+                <div class="mt-6 pt-6 border-t border-gray-200 flex gap-4">
+                    <a href="{{ path('app_livre_edit', {'id': livre.id}) }}" class="text-gray-500 hover:text-biblio-dark text-sm font-bold flex items-center gap-1">
+                        <span>✏️</span> Modifier le livre
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
