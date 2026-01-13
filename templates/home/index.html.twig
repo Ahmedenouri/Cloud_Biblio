@@ -1,233 +1,166 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Accueil | BiblioHub{% endblock %}
+{% block title %}Catalogue | BiblioHub{% endblock %}
 
 {% block stylesheets %}
-<style>
-    body {
-        background-color: #f8f6f2;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        margin: 0;
-        padding: 0;
-    }
-
-    .navbar {
-        background-color: #4e342e;
-        padding: 15px 30px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .navbar-brand {
-        font-size: 20px;
-        font-weight: bold;
-        color: #f5f5dc;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .navbar-content {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
-
-    .navbar a {
-        color: #f5f5dc;
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-    .navbar a:hover {
-        color: #fff;
-        text-decoration: underline;
-    }
-
-    .user-greeting {
-        color: #f5f5dc;
-        font-weight: 500;
-    }
-
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
-
-    .hero {
-        background: linear-gradient(135deg, rgba(78,52,46,0.9), rgba(141,110,99,0.85));
-        color: #f5f5dc;
-        padding: 80px 40px;
-        text-align: center;
-        border-radius: 16px;
-        margin-top: 60px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        animation: fadeIn 0.6s ease-out;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .hero h1 {
-        font-size: 3rem;
-        margin-bottom: 20px;
-        font-weight: 700;
-    }
-
-    .hero p {
-        font-size: 1.2rem;
-        margin-bottom: 15px;
-        line-height: 1.6;
-    }
-
-    .btn-biblio {
-        background-color: #8d6e63;
-        color: white;
-        padding: 14px 30px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        display: inline-block;
-        margin-top: 20px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .btn-biblio:hover {
-        background-color: #6d4c41;
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    }
-
-    .user-info {
-        background-color: rgba(255,255,255,0.1);
-        padding: 15px 25px;
-        border-radius: 8px;
-        margin-top: 30px;
-        display: inline-block;
-        text-align: left;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .navbar {
-            flex-direction: column;
-            gap: 15px;
-            padding: 15px;
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          biblio: {
+            dark: '#8B5E3C',      /* Marron foncé */
+            light: '#F5F1E6',     /* Beige clair */
+            accent: '#A67C52',    /* Marron clair */
+            text: '#F5F1E6',
+          }
         }
-
-        .navbar-content {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .hero {
-            padding: 60px 20px;
-            margin-top: 40px;
-        }
-
-        .hero h1 {
-            font-size: 2rem;
-        }
-
-        .hero p {
-            font-size: 1rem;
-        }
+      }
     }
-
-    .profile-img {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #f5f5dc;
-    }
-</style>
+  }
+</script>
 {% endblock %}
 
 {% block body %}
-<!-- NAVBAR -->
-<nav class="navbar" role="navigation" aria-label="Navigation principale">
-    <div class="navbar-brand">
-        <span>📚</span>
-        <span>BiblioHub</span>
-    </div>
-    
-    <div class="navbar-content">
-        {% if app.user %}
-            <span class="user-greeting">
-                Bonjour {{ app.user.nom }}
-            </span>
-            <a href="{{ path('app_logout') }}">Déconnexion</a>
-        {% else %}
-            <a href="{{ path('app_login') }}">Connexion</a>
-        {% endif %}
-    </div>
-</nav>
+<div class="min-h-screen bg-biblio-light font-sans text-gray-800">
 
-<!-- HERO SECTION -->
-<div class="container">
-    <section class="hero" role="main">
-        <h1>Bienvenue sur BiblioHub</h1>
-        <p>
-            Votre bibliothèque en ligne pour découvrir et gérer vos livres 📖
-        </p>
-
-        {% if app.user %}
-            <div class="user-info">
-                <p>Connecté en tant que <strong>{{ app.user.email }}</strong></p>
-                {% if 'ROLE_ADMIN' in app.user.roles %}
-                    <p style="margin-top: 10px;">
-                        <span style="background-color: #ff6b6b; padding: 4px 10px; border-radius: 4px; font-size: 0.9rem;">
-                            👑 Administrateur
-                        </span>
-                    </p>
+    <nav class="bg-biblio-dark px-8 py-4 shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2 text-biblio-text text-xl font-bold">
+                <span class="text-2xl">📚</span>
+                <span>BiblioHub</span>
+            </div>
+            
+            <div class="flex items-center gap-6 text-biblio-text font-medium">
+                {% if app.user %}
+                    <span class="opacity-90">Bonjour {{ app.user.nom }}</span>
+                    <a href="{{ path('app_logout') }}" class="hover:text-white hover:underline transition-colors">Déconnexion</a>
+                {% else %}
+                    <a href="{{ path('app_login') }}" class="hover:text-white hover:underline transition-colors">Connexion</a>
                 {% endif %}
             </div>
-
-            <div style="margin-top: 30px;">
-                <a href="{{ path('app_login') }}" class="btn-biblio">
-                    Explorer la bibliothèque
-                </a>
-            </div>
-        {% else %}
-            <a href="{{ path('app_login') }}" class="btn-biblio">
-                Se connecter / S'inscrire
-            </a>
-        {% endif %}
-    </section>
-
-    {% if not app.user %}
-    <!-- Pourquoi rejoindre BiblioHub -->
-    <section style="margin-top: 60px; text-align: center; padding-bottom: 60px;">
-        <h2 style="color: #4e342e; margin-bottom: 40px; font-size: 2rem;">
-            Pourquoi rejoindre BiblioHub ?
-        </h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
-            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div style="font-size: 3rem; margin-bottom: 15px;">📚</div>
-                <h3 style="color: #4e342e; margin-bottom: 10px;">Large catalogue</h3>
-                <p style="color: #666;">Découvrez des milliers de livres</p>
-            </div>
-            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div style="font-size: 3rem; margin-bottom: 15px;">🔖</div>
-                <h3 style="color: #4e342e; margin-bottom: 10px;">Gestion facile</h3>
-                <p style="color: #666;">Gérez vos emprunts en ligne</p>
-            </div>
-            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div style="font-size: 3rem; margin-bottom: 15px;">⚡</div>
-                <h3 style="color: #4e342e; margin-bottom: 10px;">Rapide et simple</h3>
-                <p style="color: #666;">Interface intuitive et moderne</p>
-            </div>
         </div>
-    </section>
-    {% endif %}
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-6 py-10">
+        
+        <div class="flex justify-between items-center mb-8 border-b border-gray-300 pb-4">
+            <h1 class="text-3xl font-bold text-biblio-dark">Catalogue des Livres</h1>
+            
+            {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
+                <a href="{{ path('app_livre_new') }}" class="bg-biblio-dark hover:bg-biblio-accent text-biblio-light px-5 py-2 rounded-lg shadow transition-colors flex items-center gap-2 font-semibold">
+                    <span>+</span> Ajouter un livre
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for livre in livres %}
+                <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 flex flex-col h-full border border-gray-100 group">
+                    
+                    <div class="relative h-64 bg-gray-100 overflow-hidden">
+                        {% if livre.image %}
+                            <img src="{{ asset('uploads/images/' ~ livre.image) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="{{ livre.titre }}">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-gray-400 bg-biblio-light">
+                                <span class="text-sm">Pas d'image</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="absolute top-3 left-3">
+                            {% if livre.stock > 0 %}
+                                <span class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md uppercase tracking-wider">
+                                    📦 Stock: {{ livre.stock }}
+                                </span>
+                            {% else %}
+                                <span class="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md uppercase tracking-wider">
+                                    🚫 Rupture
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="absolute bottom-3 right-3">
+                            <span class="bg-white text-biblio-dark px-3 py-1 rounded-lg text-sm font-bold shadow-md">
+                                {{ livre.prix }} MAD
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="p-6 flex flex-col flex-grow bg-white">
+                        <div class="flex justify-between items-start mb-2">
+                            <h5 class="text-xl font-bold text-biblio-dark line-clamp-1" title="{{ livre.titre }}">{{ livre.titre }}</h5>
+                        </div>
+                        <p class="text-gray-500 text-xs uppercase font-bold mb-3">{{ livre.categorie }}</p>
+                        
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
+                            {{ livre.description }}
+                        </p>
+                        
+                        <div class="mt-auto pt-4 border-t border-gray-100 space-y-3">
+                            
+                            {# 1. BOUTON PDF (Toujours visible si PDF existe) #}
+                            {% if livre.pdf %}
+                                <a href="{{ path('app_livre_download', {'id': livre.id}) }}" target="_blank" class="block w-full text-center bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 rounded-lg shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
+                                    <span>📥</span> Télécharger PDF
+                                </a>
+                            {% endif %}
+
+                            {# 2. BOUTONS PHYSIQUES (Seulement si Stock > 0) #}
+                            {% if livre.stock > 0 %}
+                                <div class="grid grid-cols-2 gap-3">
+                                    {% if app.user %}
+                                        <a href="{{ path('app_livre_emprunt', {'id': livre.id}) }}" class="bg-biblio-dark hover:bg-biblio-accent text-white text-center py-2 rounded-lg font-semibold text-sm transition-colors">
+                                            📖 Emprunter
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ path('app_login') }}" class="bg-biblio-dark hover:bg-biblio-accent text-white text-center py-2 rounded-lg font-semibold text-sm transition-colors">
+                                            📖 Emprunter
+                                        </a>
+                                    {% endif %}
+
+                                    <button class="border-2 border-biblio-dark text-biblio-dark hover:bg-biblio-light font-semibold py-2 rounded-lg text-sm transition-colors">
+                                        🛒 Acheter
+                                    </button>
+                                </div>
+                            {% else %}
+                                <div class="w-full bg-red-50 border border-red-200 text-red-600 text-center py-2 rounded-lg text-xs font-bold">Indisponible pour le moment
+                                </div>
+                            {% endif %}
+
+                            {# 3. ACTIONS ADMIN (Visible seulement pour le bibliothécaire) #}
+                            {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
+                                <div class="flex justify-between items-center mt-3 pt-3 border-t border-dashed border-gray-200">
+                                    <a href="{{ path('app_livre_edit', {'id': livre.id}) }}" class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors">
+                                        ✏️ Modifier
+                                    </a>
+                                    {# Note: Assurez-vous d'avoir une méthode de suppression sécurisée (formulaire) #}
+                                    <form method="post" action="{{ path('app_livre_delete', {'id': livre.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce livre ?');" class="inline">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ livre.id) }}">
+                                        <button class="text-red-500 hover:text-red-700 text-xs font-semibold transition-colors">
+                                            🗑️ Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                {# État vide si la boucle "livres" ne contient rien #}
+                <div class="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center py-16 text-gray-400 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                    <span class="text-6xl mb-4">📚</span>
+                    <h3 class="text-xl font-bold text-gray-600">Le catalogue est vide</h3>
+                    <p class="text-sm mt-2">Aucun livre n'a été trouvé pour le moment.</p>
+                    {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
+                        <a href="{{ path('app_livre_new') }}" class="mt-4 text-biblio-dark font-bold hover:underline">
+                            Ajouter le premier livre
+                        </a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 {% endblock %}

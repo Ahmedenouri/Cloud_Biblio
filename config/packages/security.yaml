@@ -10,6 +10,12 @@ security:
                 class: App\Entity\User
                 property: email
 
+    # Hiérarchie des rôles (C'est ici que la magie opère !)
+    # L'ADMIN hérite automatiquement des droits du BIBLIOTHECAIRE
+    role_hierarchy:
+        ROLE_BIBLIOTHECAIRE: [ROLE_USER]
+        ROLE_ADMIN:          [ROLE_BIBLIOTHECAIRE]
+
     # Pare-feu
     firewalls:
         dev:
@@ -19,55 +25,28 @@ security:
         main:
             lazy: true
             provider: app_user_provider
-
-            # Configuration du formulaire de login
+            
+            # Login
             form_login:
                 login_path: app_login
                 check_path: app_login
-                username_parameter: _username
-                password_parameter: _password
                 enable_csrf: true
-                csrf_parameter: _csrf_token
-                csrf_token_id: authenticate
-                default_target_path: app_home
-                always_use_default_target_path: false  # ← Changé pour permettre les redirections personnalisées
-                # Si vous voulez gérer les échecs de connexion
-                # failure_path: app_login
-                # failure_forward: false
+                default_target_path: app_home # Redirection après login
 
-            # Configuration du logout
+            # Logout
             logout:
                 path: app_logout
                 target: app_login
-                # Invalider la session lors de la déconnexion
-                invalidate_session: true
-                # Effacer les cookies
-                # delete_cookies:
-                #     PHPSESSID: { path: /, domain: null }
 
-            # Se souvenir de moi (optionnel mais recommandé)
+            # Optionnel : Se souvenir de moi
             remember_me:
                 secret: '%kernel.secret%'
-                lifetime: 604800  # 1 semaine en secondes
-                path: /
-                always_remember_me: false
+                lifetime: 604800 # 1 semaine
 
     # Contrôle d'accès
     access_control:
-        # Routes publiques (accessibles sans authentification)
-        - { path: ^/login$, roles: PUBLIC_ACCESS }
-        - { path: ^/verify/email, roles: PUBLIC_ACCESS }
-        - { path: ^/register$, roles: PUBLIC_ACCESS }
-        - { path: ^/$, roles: PUBLIC_ACCESS }  # Page d'accueil publique
-        
-        # Routes protégées pour les administrateurs
         - { path: ^/admin, roles: ROLE_ADMIN }
-        - { path: ^/profile, roles: ROLE_USER }
-        
-        # Toutes les autres routes nécessitent une authentification
-        # - { path: ^/, roles: ROLE_USER }
-
-    # Hiérarchie des rôles
-    role_hierarchy:
-        ROLE_ADMIN: [ROLE_USER]
-        ROLE_BIBLIOTHECAIRE: [ROLE_USER]
+        # On laisse l'accueil, le login et le register ouverts à tous
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/, roles: PUBLIC_ACCESS }

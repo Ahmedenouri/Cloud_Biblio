@@ -1,4 +1,27 @@
-{{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
+{{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+    <div class="text-red-500 text-sm">{{ form_errors(form) }}</div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="col-span-2">{{ form_row(form.titre) }}</div>
+        <div>{{ form_row(form.categorie) }}</div>
+        <div>{{ form_row(form.prix) }}</div>
+        
+        <div class="col-span-2 bg-gray-50 p-4 rounded border">
+            {{ form_row(form.type) }}
+            <div class="mt-4">{{ form_row(form.stock) }}</div>
+        </div>
+
+        <div class="col-span-2">{{ form_row(form.description) }}</div>
+        
+        <div class="col-span-2 border-t pt-4 grid grid-cols-2 gap-4">
+            <div>{{ form_row(form.imageFile) }}</div>
+            <div>{{ form_row(form.pdfFile) }}</div>
+        </div>
+    </div>
+
+    <div class="pt-6 flex justify-end">
+        <button class="bg-[#8B5E3C] hover:bg-[#A67C52] text-white font-bold py-3 px-8 rounded shadow">
+            {{ button_label|default('Enregistrer') }}
+        </button>
+    </div>
 {{ form_end(form) }}

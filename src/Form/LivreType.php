@@ -3,70 +3,96 @@
 namespace App\Form;
 
 use App\Entity\Livre;
-use App\Entity\LivrePdf;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\MoneyType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
-
 
 class LivreType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('titre')
-            ->add('description')
-            ->add('prix')
-            ->add('type', ChoiceType::class, [
-                    'choices' => [
-                        'Physique' => 'physique',
-                        'PDF' => 'pdf',
-                    ],
-                ])
-            ->add('stock')
-            ->add('categorie', ChoiceType::class, [
-                    'choices' => [
-                        'Roman' => 'roman',
-                        'Science' => 'science',
-                        'Histoire' => 'histoire',
-                        'Informatique' => 'informatique',
-                    ],
-                    'placeholder' => 'Choisir une catégorie',
-                ])
-            ->add('imageFile', FileType::class, [
-                    'label' => 'Image du livre',
-                    'mapped' => false, // important : ce n’est pas directement dans l’entity
-                    'required' => false,
-                    'constraints' => [
-                        new File([
-                            'mimeTypes' => [
-                                'image/jpeg',
-                                'image/png',
-                                'image/webp'
-                            ],
-                            'mimeTypesMessage' => 'Veuillez uploader une image valide (jpg, png, webp)',
-                        ])
-                    ]
-                ])
-
-            ->add('createdAt')
-            ->add('updatedAt')
+            ->add('titre', TextType::class, [
+                'label' => 'Titre du livre',
+                'attr' => ['class' => 'w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-[#8d6e63]']
+            ])
+            ->add('description', TextareaType::class, [
+                'label' => 'Résumé',
+                'attr' => ['class' => 'w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-[#8d6e63]', 'rows' => 5]
+            ])
+            ->add('prix', MoneyType::class, [
+                'currency' => 'MAD',
+                'label' => 'Prix',
+                'attr' => ['class' => 'w-full border border-gray-300 p-2 rounded']
+            ])
             
+            // TYPE : Sert à définir l'étiquette principale (Badge jaune ou bleu sur le site)
+            ->add('type', ChoiceType::class, [
+                'label' => 'Format principal (Affichage)',
+                'choices' => [
+                    'Livre Physique (Papier)' => 'physique',
+                    'Livre Numérique (PDF)' => 'pdf',
+                ],
+                'expanded' => true, // Boutons radio
+                'multiple' => false,
+                'attr' => ['class' => 'flex gap-6 mt-2 mb-4']
+            ])
+
+            ->add('stock', IntegerType::class, [
+                'label' => 'Stock (Nombre d\'exemplaires physiques)',
+                'required' => false,
+                'attr' => ['class' => 'w-full border border-gray-300 p-2 rounded']
+            ])
+
+            ->add('categorie', ChoiceType::class, [
+                'choices' => [
+                    'Roman' => 'Roman',
+                    'Science-Fiction' => 'Science-Fiction',
+                    'Histoire' => 'Histoire',
+                    'Informatique' => 'Informatique',
+                    'Développement Personnel' => 'Développement Personnel',
+                ],
+                'placeholder' => 'Choisir une catégorie',
+                'attr' => ['class' => 'w-full border border-gray-300 p-2 rounded']
+            ])
+            
+            // IMAGE
+            ->add('imageFile', FileType::class, [
+                'label' => 'Couverture (Image)',
+                'mapped' => false,
+                'required' => false,
+                'constraints' => [
+                    new File([
+                        'maxSize' => '2M',
+                        'mimeTypes' => ['image/jpeg', 'image/png', 'image/webp'],
+                        'mimeTypesMessage' => 'Format invalide (JPG, PNG, WEBP)',
+                    ])
+                ],
+                'attr' => ['class' => 'w-full border border-gray-300 p-2 rounded bg-white']
+            ])
+
+            // PDF : Toujours accessible pour upload
             ->add('pdfFile', FileType::class, [
-                    'label' => 'Fichier PDF',
-                    'mapped' => false,
-                    'required' => false,
-                    'constraints' => [
-                        new File([
-                            'mimeTypes' => ['application/pdf'],
-                            'mimeTypesMessage' => 'Veuillez uploader un fichier PDF valide',
-                        ]),
-                    ],
-                ]);
+                'label' => 'Fichier PDF (Optionnel)',
+                'mapped' => false,
+                'required' => false,
+                'help' => 'Vous pouvez ajouter un PDF même si le livre est vendu en physique.',
+                'constraints' => [
+                    new File([
+                        'maxSize' => '10M',
+                        'mimeTypes' => ['application/pdf'],
+                        'mimeTypesMessage' => 'Veuillez uploader un PDF valide',
+                    ])
+                ],
+                'attr' => ['class' => 'w-full border border-gray-300 p-2 rounded bg-white']
+            ])
         ;
     }
 

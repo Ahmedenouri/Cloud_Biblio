@@ -1,28 +1,41 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Authentication{% endblock %}
+{% block title %}Authentification{% endblock %}
 
 {% block stylesheets %}
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          biblio: {
+            dark: '#8B5E3C',      /* Marron foncé */
+            light: '#F5F1E6',     /* Beige clair */
+            accent: '#A67C52',    /* Marron clair */
+          }
+        }
+      }
+    }
+  }
+</script>
 <style>
+    /* ... (Garder les animations CSS précédentes inchangées) ... */
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes letterAppear { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-
     .animate-fadeIn { animation: fadeIn 0.6s ease-out; }
     .letter { display: inline-block; opacity: 0; animation: letterAppear 0.3s ease-out forwards; }
-
+    
     .input-animate { transition: all 0.3s ease; }
-    .input-animate:focus { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139,94,60,0.15); }
-
+    .input-animate:focus { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139,94,60,0.15); } /* Ombre teintée marron */
+    
     .button-animate { transition: all 0.3s ease; }
     .button-animate:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139,94,60,0.3); }
-    .button-animate:active { transform: translateY(0); }
 
     .form-container { position: absolute; width: 100%; height: 100%; transition: transform 0.6s ease-in-out; }
     .image-container { position: absolute; width: 50%; height: 100%; transition: transform 0.6s ease-in-out; z-index:1; }
     .main-wrapper { position: relative; overflow: hidden; }
 
-    /* Login / Register slide */
     .auth-container.login-mode .image-container { left:0; transform: translateX(0); }
     .auth-container.login-mode .login-form { right:0; transform: translateX(0); }
     .auth-container.login-mode .register-form { right:0; transform: translateX(100%); }
@@ -31,102 +44,112 @@
     .auth-container.register-mode .login-form { left:0; transform: translateX(-100%); }
     .auth-container.register-mode .register-form { left:0; transform: translateX(0); }
 
+    .form-error { color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem; }
+    .form-error ul { list-style: none; padding: 0; }
+
     @media (max-width: 768px) {
         .image-container { display: none; }
         .form-container { position: relative !important; }
     }
 </style>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: { colors: { primary: '#8B5E3C', secondary: '#F5F1E6', accent: '#A67C52' } }
-    }
-  }
-</script>
 {% endblock %}
 
 {% block body %}
-<div class="min-h-screen w-full bg-[#E5DCC8] flex items-center justify-center animate-fadeIn">
-    <div class="auth-container {% if show_register is defined and show_register %}register-mode{% else %}login-mode{% endif %} bg-secondary shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] rounded-lg max-w-4xl w-full overflow-hidden main-wrapper" style="height:600px;">
+<div class="min-h-screen w-full bg-biblio-light flex items-center justify-center animate-fadeIn">
+    
+    <div class="auth-container {% if show_register is defined and show_register %}register-mode{% else %}login-mode{% endif %} bg-white shadow-[0_10px_15px_-3px_rgba(139,94,60,0.1)] rounded-lg max-w-4xl w-full overflow-hidden main-wrapper" style="height:600px;">
 
-        <!-- IMAGE -->
         <div class="image-container hidden md:block">
             <img src="{{ asset('images/loginRegisterImg.png') }}" alt="Auth Image" class="h-full w-full object-cover">
         </div>
 
-        <!-- LOGIN FORM -->
         <div class="form-container login-form">
             <div class="w-full h-full p-8 flex flex-col justify-center md:w-1/2 md:ml-auto">
-                <h1 class="text-3xl font-bold mb-6 text-center text-primary login-title">Please sign in</h1>
+                <h1 class="text-3xl font-bold mb-6 text-center text-biblio-dark login-title">Connexion</h1>
+                
                 <form method="post" action="{{ path('app_login') }}" class="space-y-4">
                     {% if error %}
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm">
+                            {{ error.messageKey|trans(error.messageData, 'security') }}
+                        </div>
                     {% endif %}
+                    
                     {% for message in app.flashes('success') %}
-                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">{{ message }}</div>
-                    {% endfor %}
-                    {% for message in app.flashes('error') %}
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{{ message }}</div>
+                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded text-sm">{{ message }}</div>
                     {% endfor %}
 
                     <div>
-                        <label for="login-email" class="block text-sm font-medium mb-1 text-primary">Email</label>
-                        <input type="email" value="{{ last_username }}" name="_username" id="login-email" class="w-full border-none shadow-none bg-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent input-animate" autocomplete="email" required>
+                        <label for="login-email" class="block text-sm font-medium mb-1 text-biblio-dark">Email</label>
+                        <input type="email" value="{{ last_username }}" name="_username" id="login-email" class="w-full border border-gray-200 bg-biblio-light/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-biblio-accent focus:border-transparent input-animate" autocomplete="email" required>
                     </div>
 
                     <div>
-                        <label for="login-password" class="block text-sm font-medium mb-1 text-primary">Password</label>
-                        <input type="password" name="_password" id="login-password" class="w-full border-none shadow-none bg-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent input-animate" autocomplete="current-password" required>
+                        <label for="login-password" class="block text-sm font-medium mb-1 text-biblio-dark">Mot de passe</label>
+                        <input type="password" name="_password" id="login-password" class="w-full border border-gray-200 bg-biblio-light/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-biblio-accent focus:border-transparent input-animate" autocomplete="current-password" required>
                     </div>
 
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-                    <button class="w-full bg-primary text-secondary py-2 rounded button-animate" type="submit">Sign in</button>
+                    
+                    <button class="w-full bg-biblio-dark hover:bg-biblio-accent text-white py-2 rounded button-animate font-semibold transition-colors" type="submit">Se connecter</button>
                 </form>
 
                 <div class="mt-6 text-center text-sm">
-                    <span class="text-gray-600">Don't have an account?</span>
-                    <a href="#" id="show-register" class="text-primary hover:text-accent font-medium ml-1 transition-colors duration-300 cursor-pointer">Sign up</a>
+                    <span class="text-gray-600">Pas encore de compte ?</span>
+                    <a href="#" id="show-register" class="text-biblio-dark hover:text-biblio-accent font-bold ml-1 transition-colors duration-300 cursor-pointer">S'inscrire</a>
                 </div>
             </div>
         </div>
 
-        <!-- REGISTER FORM -->
         <div class="form-container register-form">
             <div class="w-full h-full p-8 flex flex-col justify-center md:w-1/2">
-                <h1 class="text-3xl font-bold mb-6 text-center text-primary register-title">Create your account</h1>
-                <form method="post" action="{{ path('app_register') }}" class="space-y-4">
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
-                    {% for message in app.flashes('error') %}
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{{ message }}</div>
-                    {% endfor %}
+                <h1 class="text-3xl font-bold mb-6 text-center text-biblio-dark register-title">Créer un compte</h1>
+                
+                {{ form_start(registrationForm, {'attr': {'class': 'space-y-4', 'id': 'registration-form'}}) }}
+                    
+                    <div class="form-error">{{ form_errors(registrationForm) }}</div>
 
                     <div>
-                        <label for="register-username" class="block text-sm font-medium mb-1 text-primary">Username</label>
-                        <input type="text" name="username" id="register-username" class="w-full border-none shadow-none bg-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent input-animate" autocomplete="username" minlength="3" required>
+                        <label class="block text-sm font-medium mb-1 text-biblio-dark">Nom d'utilisateur</label>
+                        {{ form_widget(registrationForm.nom, {
+                            'attr': {
+                                'class': 'w-full border border-gray-200 bg-biblio-light/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-biblio-accent focus:border-transparent input-animate',
+                                'placeholder': 'Votre nom'
+                            }
+                        }) }}
+                        <div class="form-error">{{ form_errors(registrationForm.nom) }}</div>
                     </div>
 
                     <div>
-                        <label for="register-email" class="block text-sm font-medium mb-1 text-primary">Email</label>
-                        <input type="email" name="email" id="register-email" class="w-full border-none shadow-none bg-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent input-animate" autocomplete="email" required>
+                        <label class="block text-sm font-medium mb-1 text-biblio-dark">Email</label>
+                        {{ form_widget(registrationForm.email, {
+                            'attr': {
+                                'class': 'w-full border border-gray-200 bg-biblio-light/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-biblio-accent focus:border-transparent input-animate',
+                                'placeholder': 'exemple@email.com'
+                            }
+                        }) }}
+                        <div class="form-error">{{ form_errors(registrationForm.email) }}</div>
                     </div>
 
                     <div>
-                        <label for="register-password" class="block text-sm font-medium mb-1 text-primary">Password</label>
-                        <input type="password" name="password" id="register-password" class="w-full border-none shadow-none bg-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent input-animate" autocomplete="new-password" minlength="8" required>
-                        <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+                        <label class="block text-sm font-medium mb-1 text-biblio-dark">Mot de passe</label>
+                        {{ form_widget(registrationForm.plainPassword, {
+                            'attr': {
+                                'class': 'w-full border border-gray-200 bg-biblio-light/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-biblio-accent focus:border-transparent input-animate',
+                                'placeholder': 'Minimum 6 caractères'
+                            }
+                        }) }}
+                        <div class="form-error">{{ form_errors(registrationForm.plainPassword) }}</div>
                     </div>
 
-                    <div>
-                        <label for="confirm-password" class="block text-sm font-medium mb-1 text-primary">Confirm Password</label>
-                        <input type="password" name="confirm_password" id="confirm-password" class="w-full border-none shadow-none bg-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent input-animate" autocomplete="new-password" minlength="8" required>
-                    </div>
+                    {{ form_row(registrationForm._token) }}
 
-                    <button class="w-full bg-primary text-secondary py-2 rounded button-animate" type="submit">Register</button>
-                </form>
+                    <button class="w-full bg-biblio-dark hover:bg-biblio-accent text-white py-2 rounded button-animate font-semibold transition-colors" type="submit">S'inscrire</button>
+                
+                {{ form_end(registrationForm, {'render_rest': false}) }}
 
                 <div class="mt-6 text-center text-sm">
-                    <span class="text-gray-600">Already have an account?</span>
-                    <a href="#" id="show-login" class="text-primary hover:text-accent font-medium ml-1 transition-colors duration-300 cursor-pointer">Sign in</a>
+                    <span class="text-gray-600">Déjà inscrit ?</span>
+                    <a href="#" id="show-login" class="text-biblio-dark hover:text-biblio-accent font-bold ml-1 transition-colors duration-300 cursor-pointer">Se connecter</a>
                 </div>
             </div>
         </div>
@@ -134,58 +157,43 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const container = document.querySelector('.auth-container');
-    const showRegisterBtn = document.getElementById('show-register');
-    const showLoginBtn = document.getElementById('show-login');
-    const registerPassword = document.getElementById('register-password');
-    const confirmPassword = document.getElementById('confirm-password');
+    // (Garder le même script JavaScript que précédemment)
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.querySelector('.auth-container');
+        const showRegisterBtn = document.getElementById('show-register');
+        const showLoginBtn = document.getElementById('show-login');
 
-    // Animation lettres
-    function animateTitle(selector) {
-        const title = document.querySelector(selector);
-        if (!title) return;
-        const text = title.textContent;
-        title.textContent = '';
-        text.split('').forEach((char,index) => {
-            const span = document.createElement('span');
-            span.className = 'letter';
-            span.textContent = char === ' ' ? '\u00A0' : char;
-            span.style.animationDelay = (index*0.05)+'s';
-            title.appendChild(span);
-        });
-    }
-
-    if(container.classList.contains('login-mode')) animateTitle('.login-title');
-    else animateTitle('.register-title');
-
-    // Basculer vers register
-    showRegisterBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        container.classList.remove('login-mode');
-        container.classList.add('register-mode');
-        setTimeout(()=>animateTitle('.register-title'),300);
-    });
-
-    // Basculer vers login
-    showLoginBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        container.classList.remove('register-mode');
-        container.classList.add('login-mode');
-        setTimeout(()=>animateTitle('.login-title'),300);
-    });
-
-    /*
-    // Validation passwords
-    if(registerPassword && confirmPassword){
-        function validatePasswords(){
-            if(registerPassword.value !== confirmPassword.value) confirmPassword.setCustomValidity('Passwords do not match');
-            else confirmPassword.setCustomValidity('');
+        function animateTitle(selector) {
+            const title = document.querySelector(selector);
+            if (!title) return;
+            const originalText = title.getAttribute('data-text') || title.textContent;
+            title.setAttribute('data-text', originalText);
+            title.textContent = '';
+            originalText.split('').forEach((char,index) => {
+                const span = document.createElement('span');
+                span.className = 'letter';
+                span.textContent = char === ' ' ? '\u00A0' : char;
+                span.style.animationDelay = (index*0.05)+'s';
+                title.appendChild(span);
+            });
         }
-        registerPassword.addEventListener('input',validatePasswords);
-        confirmPassword.addEventListener('input',validatePasswords);
-    }
-    */
-});
+
+        if(container.classList.contains('login-mode')) animateTitle('.login-title');
+        else animateTitle('.register-title');
+
+        showRegisterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            container.classList.remove('login-mode');
+            container.classList.add('register-mode');
+            setTimeout(()=>animateTitle('.register-title'), 300);
+        });
+
+        showLoginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            container.classList.remove('register-mode');
+            container.classList.add('login-mode');
+            setTimeout(()=>animateTitle('.login-title'), 300);
+        });
+    });
 </script>
 {% endblock %}

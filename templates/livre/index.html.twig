@@ -1,51 +1,46 @@
 {% extends 'base.html.twig' %}
-
-{% block title %}Livre index{% endblock %}
+{% block title %}Gestion Livres{% endblock %}
 
 {% block body %}
-    <h1>Livre index</h1>
+<div class="min-h-screen bg-[#F5F1E6] p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-[#8B5E3C]">Gestion du Catalogue</h1>
+            <a href="{{ path('app_livre_new') }}" class="bg-[#8B5E3C] text-white px-4 py-2 rounded shadow">+ Nouveau</a>
+        </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Titre</th>
-                <th>Description</th>
-                <th>Prix</th>
-                <th>Type</th>
-                <th>Stock</th>
-                <th>Categorie</th>
-                <th>Image</th>
-                <th>CreatedAt</th>
-                <th>UpdatedAt</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for livre in livres %}
-            <tr>
-                <td>{{ livre.id }}</td>
-                <td>{{ livre.titre }}</td>
-                <td>{{ livre.description }}</td>
-                <td>{{ livre.prix }}</td>
-                <td>{{ livre.type }}</td>
-                <td>{{ livre.stock }}</td>
-                <td>{{ livre.categorie }}</td>
-                <td>{{ livre.image }}</td>
-                <td>{{ livre.createdAt ? livre.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>{{ livre.updatedAt ? livre.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>
-                    <a href="{{ path('app_livre_show', {'id': livre.id}) }}">show</a>
-                    <a href="{{ path('app_livre_edit', {'id': livre.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="11">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-
-    <a href="{{ path('app_livre_new') }}">Create new</a>
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full leading-normal">
+                <thead>
+                    <tr class="bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase">
+                        <th class="px-5 py-3">Image</th>
+                        <th class="px-5 py-3">Titre</th>
+                        <th class="px-5 py-3">PDF</th>
+                        <th class="px-5 py-3">Stock</th>
+                        <th class="px-5 py-3">Prix</th>
+                        <th class="px-5 py-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for livre in livres %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="px-5 py-4"><div class="w-10 h-14 bg-gray-200">{% if livre.image %}<img class="w-full h-full object-cover" src="{{ asset('uploads/images/' ~ livre.image) }}">{% endif %}</div></td>
+                        <td class="px-5 py-4"><p class="font-bold text-[#8B5E3C]">{{ livre.titre }}</p></td>
+                        <td class="px-5 py-4">
+                            <span class="{{ livre.pdf ? 'bg-cyan-100 text-cyan-800' : 'bg-gray-100 text-gray-400' }} px-2 py-1 rounded text-xs font-bold">{{ livre.pdf ? 'OUI' : 'NON' }}</span>
+                        </td>
+                        <td class="px-5 py-4">
+                            <span class="{{ livre.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }} px-2 py-1 rounded font-bold">{{ livre.stock }}</span>
+                        </td>
+                        <td class="px-5 py-4">{{ livre.prix }} MAD</td>
+                        <td class="px-5 py-4 text-right">
+                            <a href="{{ path('app_livre_edit', {'id': livre.id}) }}" class="text-[#A67C52] font-bold">Modifier</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}

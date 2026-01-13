@@ -2,8 +2,9 @@
 
 namespace App\Controller;
 
-use App\Entity\PendingUser; // Import PendingUser
+use App\Entity\PendingUser;
 use App\Entity\User;
+use App\Form\RegistrationFormType;
 use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,16 +21,24 @@ class AuthController extends AbstractController
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_home');
+            return $this->redirectToRoute('app_home'); // Ou la route de votre choix
         }
 
         $error = $authenticationUtils->getLastAuthenticationError();
         $lastUsername = $authenticationUtils->getLastUsername();
 
+        // IMPORTANT : On doit créer le formulaire d'inscription ici aussi
+        // pour qu'il puisse s'afficher dans la partie "Register" du slider.
+        $user = new User();
+        $form = $this->createForm(RegistrationFormType::class, $user, [
+            'action' => $this->generateUrl('app_register')
+        ]);
+
         return $this->render('auth/auth.html.twig', [
             'last_username' => $lastUsername,
             'error' => $error,
-            'show_register' => false,
+            'registrationForm' => $form->createView(), // On passe la vue du formulaire
+            'show_register' => false, // Par défaut, on montre le Login
         ]);
     }
 
@@ -39,138 +48,82 @@ class AuthController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         EntityManagerInterface $entityManager,
         EmailService $emailService,
-        UrlGeneratorInterface $urlGenerator
+        UrlGeneratorInterface $urlGenerator,
+        AuthenticationUtils $authenticationUtils // Ajouté pour gérer les erreurs de login si on réaffiche la page
     ): Response {
+        
         if ($this->getUser()) {
-             return $this->redirectToRoute('app_home');
+            return $this->redirectToRoute('app_home');
         }
 
-        if ($request->isMethod('POST')) {
-            $submittedToken = $request->request->get('_csrf_token');
-            if (!$this->isCsrfTokenValid('register', $submittedToken)) {
-                $this->addFlash('error', 'Security error. Please try again.');
-                return $this->render('auth/auth.html.twig', [
-                    'last_username' => '',
-                    'error' => null,
-                    'show_register' => true,
-                ], new Response(null, 422));
-            }
+        // 1. On utilise le Formulaire Symfony standard
+        $user = new User(); // On utilise User pour capter les données du formulaire
+        $form = $this->createForm(RegistrationFormType::class, $user);
+        $form->handleRequest($request);
 
-            $username = trim($request->request->get('username', ''));
-            $email = strtolower(trim($request->request->get('email', '')));
-            $password = $request->request->get('password', '');
-            $confirmPassword = $request->request->get('confirm_password', '');
+        if ($form->isSubmitted() && $form->isValid()) {
+            
+            // Récupération des données propres
+            $email = $user->getEmail();
+            $nom = $user->getNom();
+            $plainPassword = $form->get('plainPassword')->getData();
 
-            $errors = [];
-
-            if (empty($username)) {
-                $errors[] = 'Username is required.';
-            } elseif (strlen($username) < 3) {
-                $errors[] = 'Username must be at least 3 characters.';
-            } elseif (strlen($username) > 50) {
-                $errors[] = 'Username too long.';
-            } elseif (!preg_match('/^[a-zA-Z0-9_-]+$/', $username)) {
-                $errors[] = 'Invalid username format.';
-            }
-
-            if (empty($email)) {
-                $errors[] = 'Email is required.';
-            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $errors[] = 'Invalid email format.';
-            } elseif (strlen($email) > 180) {
-                $errors[] = 'Email too long.';
-            }
-
-            if (empty($password)) {
-                $errors[] = 'Password is required.';
-            } elseif (strlen($password) < 8) {
-                $errors[] = 'Password must be at least 8 characters.';
-            }
-
-            if ($password !== $confirmPassword) {
-                $errors[] = 'Passwords do not match.';
-            }
-
-            if (!empty($errors)) {
-                foreach ($errors as $error) {
-                    $this->addFlash('error', $error);
-                }
-                return $this->render('auth/auth.html.twig', [
-                    'last_username' => $username,
-                    'error' => null,
-                    'show_register' => true,
-                ], new Response(null, 422));
-            }
-
-            // Check if email exists in User OR PendingUser
+            // 2. Vérification doublons (User ET PendingUser)
             $existingUser = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
             $existingPending = $entityManager->getRepository(PendingUser::class)->findOneBy(['email' => $email]);
-            
+
             if ($existingUser || $existingPending) {
                 $this->addFlash('error', 'Email already registered or pending verification.');
-                return $this->render('auth/auth.html.twig', [
-                    'last_username' => $username,
-                    'error' => null,
-                    'show_register' => true,
-                ], new Response(null, 422));
-            }
-
-            try {
-                // Create PENDING USER instead of real User
-                $pendingUser = new PendingUser();
-                $pendingUser->setNom($username);
-                $pendingUser->setEmail($email);
-                $pendingUser->setPassword($passwordHasher->hashPassword($pendingUser, $password)); // Using same hasher logic
-                
-                // Générer le token de vérification
-                $verificationToken = bin2hex(random_bytes(32));
-                $pendingUser->setVerificationToken($verificationToken);
-                // No isVerified field needed for PendingUser
-
-                $entityManager->persist($pendingUser);
-                $entityManager->flush();
-
-                // Créer l'URL de vérification absolue
-                $verificationUrl = $urlGenerator->generate('app_verify_email', [
-                    'token' => $verificationToken,
-                ], UrlGeneratorInterface::ABSOLUTE_URL);
-                
-                // Envoyer l'email de vérification
+                // On laisse couler vers le "return render" final pour réafficher le formulaire
+            } else {
                 try {
+                    // 3. Création du PendingUser (Votre logique spécifique)
+                    $pendingUser = new PendingUser();
+                    $pendingUser->setNom($nom);
+                    $pendingUser->setEmail($email);
+                    // On hash le mot de passe
+                    $pendingUser->setPassword($passwordHasher->hashPassword($pendingUser, $plainPassword));
+                    
+                    // Token
+                    $verificationToken = bin2hex(random_bytes(32));
+                    $pendingUser->setVerificationToken($verificationToken);
+
+                    $entityManager->persist($pendingUser);
+                    $entityManager->flush();
+
+                    // 4. Envoi Email
+                    $verificationUrl = $urlGenerator->generate('app_verify_email', [
+                        'token' => $verificationToken,
+                    ], UrlGeneratorInterface::ABSOLUTE_URL);
+
                     $emailService->sendVerificationEmail(
                         $pendingUser->getEmail(),
                         $verificationUrl,
                         'Veuillez confirmer votre email'
                     );
 
-                    // Redirect to success page
-                    return $this->redirectToRoute('app_check_email', [], 303);
+                    // Succès !
+                    return $this->redirectToRoute('app_check_email');
 
                 } catch (\Exception $e) {
-                    // TEMP: Dump error to screen
-                    dd("EMAIL SEND ERROR: " . $e->getMessage());
-                    
-                    $this->addFlash('warning', 'Account created but email could not be sent: ' . $e->getMessage());
-                    error_log("REGISTER WARNING: Email send failed: " . $e->getMessage());
-                    // In a real app we might want to delete the pending user here so they can try again,
-                    // but for now let's leave it.
-                    return $this->redirectToRoute('app_login'); 
+                    // Erreur technique (envoi mail, bdd...)
+                    $this->addFlash('error', 'Registration error: ' . $e->getMessage());
                 }
-
-            } catch (\Exception $e) {
-                $this->addFlash('error', 'Registration error: ' . $e->getMessage());
-                return $this->render('auth/auth.html.twig', [
-                    'last_username' => $username,
-                    'error' => null,
-                    'show_register' => true,
-                ], new Response(null, 422));
             }
         }
 
+        // --- GESTION DES ERREURS D'AFFICHAGE ---
+        // Si on arrive ici, c'est que le formulaire est invalide OU qu'il y a eu une erreur (doublon/exception)
+        // On doit réafficher la page Auth complète (avec Login + Register ouvert)
+
+        $error = $authenticationUtils->getLastAuthenticationError();
+        $lastUsername = $authenticationUtils->getLastUsername();
+
         return $this->render('auth/auth.html.twig', [
-            'last_username' => '',
-            'error' => null,
-            'show_register' => true,
+            'registrationForm' => $form->createView(), // Le formulaire contient maintenant les erreurs
+            'last_username' => $lastUsername,
+            'error' => $error,
+            'show_register' => true, // IMPORTANT : On force l'affichage du panneau Register
         ]);
     }
 
@@ -183,7 +136,7 @@ class AuthController extends AbstractController
     #[Route('/verify/email/{token}', name: 'app_verify_email')]
     public function verifyUserEmail(string $token, EntityManagerInterface $entityManager): Response
     {
-        // Search in PendingUser first
+        // Votre logique de vérification était correcte
         $pendingUser = $entityManager->getRepository(PendingUser::class)->findOneBy([
             'verificationToken' => $token
         ]);
@@ -193,20 +146,17 @@ class AuthController extends AbstractController
             return $this->redirectToRoute('app_login');
         }
 
-        // Move data from PendingUser to User
+        // Transfert de PendingUser vers User
         $user = new User();
         $user->setEmail($pendingUser->getEmail());
         $user->setNom($pendingUser->getNom());
-        $user->setPassword($pendingUser->getPassword());
-        $user->setIsVerified(true); // Verified because they clicked the link
-        $user->setVerificationToken(null); // Clear token
+        $user->setPassword($pendingUser->getPassword()); // Le mot de passe est déjà hashé
+        $user->setIsVerified(true);
+        // On initialise les autres champs requis par défaut si nécessaire
+        $user->setRoles(['ROLE_USER']); 
 
-        // Save new User
         $entityManager->persist($user);
-        
-        // Remove PendingUser
         $entityManager->remove($pendingUser);
-        
         $entityManager->flush();
 
         $this->addFlash('success', 'Your email has been verified! You can now log in.');
