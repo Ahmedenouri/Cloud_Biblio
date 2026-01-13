@@ -14,10 +14,8 @@
               extend: {
                 colors: {
                   biblio: {
-                    dark: '#8B5E3C',      /* Marron foncé */
-                    light: '#F5F1E6',     /* Beige clair */
-                    accent: '#A67C52',    /* Marron moyen */
-                    text: '#F5F1E6',      /* Texte clair */
+                    dark: '#8B5E3C',  /* Marron foncé demandé */
+                    light: '#F5F1E6', /* Beige clair demandé */
                   }
                 }
               }
@@ -32,27 +30,29 @@
     </head>
     <body class="bg-biblio-light font-sans text-gray-800 flex flex-col min-h-screen">
         
-        {# --- NAVBAR GLOBALE --- #}
-        <nav class="bg-biblio-dark shadow-md sticky top-0 z-50">
+        {# --- NAVBAR GLOBALE (Fond Marron #8B5E3C) --- #}
+        <nav class="bg-biblio-dark shadow-lg sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
+                <div class="flex items-center justify-between h-20">
                     
-                    <div class="flex items-center gap-6">
-                        <a href="{{ path('app_home') }}" class="flex items-center gap-2 text-biblio-text text-xl font-bold hover:opacity-90 transition mr-4">
-                            <span class="text-2xl">📚</span>
-                            <span class="hidden sm:inline">BiblioHub</span>
+                    <div class="flex items-center gap-8">
+                        <a href="{{ path('app_livre_index') }}" class="flex items-center gap-2 group">
+                            <span class="text-3xl">📚</span>
+                            <span class="text-2xl font-bold text-biblio-light group-hover:text-white transition">BiblioHub</span>
                         </a>
 
-                        <div class="hidden md:flex items-center gap-2">
-                            <a href="{{ path('app_home') }}" class="text-biblio-text hover:bg-biblio-accent px-3 py-2 rounded-md text-sm font-medium transition">
+                        <div class="hidden md:flex items-center gap-6">
+                            <a href="{{ path('app_livre_index') }}" class="text-biblio-light hover:text-white font-bold text-lg transition border-b-2 border-transparent hover:border-biblio-light pb-1">
                                 Catalogue
                             </a>
                             
                             {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
-                                <span class="text-biblio-text/30 mx-1">|</span> <a href="{{ path('app_livre_index') }}" class="text-yellow-100 hover:text-white hover:bg-biblio-accent px-3 py-2 rounded-md text-sm font-bold transition flex items-center gap-1">
-                                    <span>📚</span> Gestion Livres
+                                <span class="text-biblio-light/50 text-xl">|</span>
+                                <a href="{{ path('app_livre_new') }}" class="text-biblio-light hover:text-white font-medium transition flex items-center gap-1">
+                                    <span>⚙️</span> Gestion Livres
                                 </a>
-                                <a href="{{ path('app_emprunt_index') }}" class="text-yellow-100 hover:text-white hover:bg-biblio-accent px-3 py-2 rounded-md text-sm font-bold transition flex items-center gap-1">
+                                {# Lien fictif, à activer si vous avez la route #}
+                                <a href="#" class="text-biblio-light hover:text-white font-medium transition flex items-center gap-1">
                                     <span>📋</span> Gestion Emprunts
                                 </a>
                             {% endif %}
@@ -62,39 +62,44 @@
                     <div class="flex items-center gap-4">
                         
                         {% if app.user %}
-                            <a href="{{ path('app_mes_demandes') }}" class="hidden md:flex items-center gap-1 text-biblio-text hover:bg-biblio-accent px-3 py-2 rounded-md text-sm font-medium transition border border-biblio-text/20">
+                            <a href="{{ path('app_mes_demandes') }}" class="hidden md:flex items-center gap-2 bg-biblio-light text-biblio-dark hover:bg-white px-5 py-2.5 rounded-full font-bold shadow-md transform hover:-translate-y-0.5 transition">
                                 <span>📋</span> Mes Demandes
                             </a>
                         {% endif %}
 
-                        <a href="{{ path('app_cart_index') }}" class="flex items-center gap-2 text-biblio-text hover:bg-biblio-accent px-3 py-2 rounded-md transition font-bold" title="Voir mon panier">
+                        <a href="{{ path('app_cart_index') }}" class="flex items-center gap-2 bg-biblio-light text-biblio-dark hover:bg-white px-5 py-2.5 rounded-full font-bold shadow-md transform hover:-translate-y-0.5 transition" title="Voir mon panier">
                             <span class="text-xl">🛒</span>
-                            <span>Panier</span>
+                            <span class="hidden sm:inline">Panier</span>
+                            {% if app.session.get('panier')|length > 0 %}
+                                <span class="bg-biblio-dark text-biblio-light text-xs py-0.5 px-2 rounded-full ml-1">
+                                    {{ app.session.get('panier')|length }}
+                                </span>
+                            {% endif %}
                         </a>
 
                         {% if app.user %}
                             <div class="relative ml-2">
-                                <button type="button" onclick="toggleUserMenu()" class="flex items-center gap-2 bg-biblio-accent text-white rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-biblio-dark focus:ring-white transition shadow hover:bg-[#6d4c41]" id="user-menu-button">
+                                <button type="button" onclick="toggleUserMenu()" class="flex items-center gap-2 bg-[#6d462c] text-biblio-light hover:text-white hover:bg-[#5a3a24] rounded-full px-4 py-2 text-sm transition shadow border border-biblio-light/30" id="user-menu-button">
                                     <span class="font-bold truncate max-w-[100px]">{{ app.user.nom }}</span>
                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                                 </button>
 
-                                <div id="user-menu-dropdown" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                                    <div class="px-4 py-2 border-b border-gray-100 bg-gray-50">
-                                        <p class="text-xs text-gray-500">Connecté en tant que</p>
-                                        <p class="text-sm font-bold text-gray-900 truncate">{{ app.user.email }}</p>
+                                <div id="user-menu-dropdown" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-xl py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                                    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                                        <p class="text-xs text-gray-500 uppercase font-bold">Connecté en tant que</p>
+                                        <p class="text-sm font-bold text-biblio-dark truncate">{{ app.user.email }}</p>
                                     </div>
-                                    <a href="{{ path('app_logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold">
-                                        🚪 Déconnexion
+                                    <a href="{{ path('app_logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold flex items-center gap-2">
+                                        <span>🚪</span> Déconnexion
                                     </a>
                                 </div>
                             </div>
                         {% else %}
-                            <div class="flex gap-2">
-                                <a href="{{ path('app_login') }}" class="text-biblio-text hover:bg-biblio-accent px-3 py-2 rounded-md text-sm font-medium transition">
+                            <div class="flex gap-3">
+                                <a href="{{ path('app_login') }}" class="text-biblio-light border-2 border-biblio-light hover:bg-biblio-light hover:text-biblio-dark px-5 py-2 rounded-full font-bold transition">
                                     Connexion
                                 </a>
-                                <a href="{{ path('app_register') }}" class="bg-biblio-light text-biblio-dark hover:bg-white px-3 py-2 rounded-md text-sm font-bold shadow transition border border-biblio-light">
+                                <a href="{{ path('app_register') }}" class="bg-biblio-light text-biblio-dark hover:bg-white px-5 py-2 rounded-full text-sm font-bold shadow transition">
                                     S'inscrire
                                 </a>
                             </div>
@@ -105,15 +110,15 @@
         </nav>
 
         {# --- MESSAGES FLASH --- #}
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 w-full">
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
-                    <div class="rounded-md p-4 mb-4 shadow-sm flex items-start gap-3 animate-pulse
-                        {% if label == 'success' %}bg-green-100 text-green-800 border border-green-200{% elseif label == 'error' %}bg-red-100 text-red-800 border border-red-200{% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+                    <div class="rounded-lg p-4 mb-4 shadow-md flex items-center gap-3 animate-fade-in-down border-l-4
+                        {% if label == 'success' %}bg-green-50 text-green-800 border-green-500{% elseif label == 'error' %}bg-red-50 text-red-800 border-red-500{% else %}bg-blue-50 text-blue-800 border-blue-500{% endif %}">
                         <span class="text-xl">
                             {% if label == 'success' %}✅{% elseif label == 'error' %}❌{% else %}ℹ️{% endif %}
                         </span>
-                        <span class="font-medium">{{ message }}</span>
+                        <span class="font-bold">{{ message }}</span>
                     </div>
                 {% endfor %}
             {% endfor %}
@@ -124,10 +129,11 @@
             {% block body %}{% endblock %}
         </main>
 
-        {# --- FOOTER --- #}
-        <footer class="bg-biblio-dark text-biblio-text py-6 mt-12">
+        {# --- FOOTER (Fond Marron #8B5E3C, Texte Beige #F5F1E6) --- #}
+        <footer class="bg-biblio-dark text-biblio-light py-8 mt-12">
             <div class="max-w-7xl mx-auto px-4 text-center">
-                <p>&copy; {{ "now"|date("Y") }} BiblioHub. Tous droits réservés.</p>
+                <p class="font-medium text-lg">&copy; {{ "now"|date("Y") }} BiblioHub</p>
+                <p class="text-sm opacity-80 mt-2">La culture à portée de clic.</p>
             </div>
         </footer>
 

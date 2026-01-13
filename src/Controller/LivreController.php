@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Livre;
 use App\Entity\LivrePdf;
+use App\Entity\LigneCommande; // Important pour la vérification
 use App\Form\LivreType;
 use App\Repository\LivreRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -34,6 +35,12 @@ final class LivreController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
     {
         $livre = new Livre();
+        
+        // CORRECTION IMPORTANTE :
+        // Comme on a retiré le champ "Type" du formulaire, on le force ici
+        // pour éviter l'erreur "Column 'type' cannot be null".
+        $livre->setType('hybride'); 
+
         $form = $this->createForm(LivreType::class, $livre);
         $form->handleRequest($request);
 
@@ -54,7 +61,7 @@ final class LivreController extends AbstractController
                         $newFilename
                     );
                 } catch (FileException $e) {
-                    // Gérer l'erreur si besoin
+                    // Gérer l'erreur
                 }
                 $livre->setImage($newFilename);
             }
@@ -74,11 +81,8 @@ final class LivreController extends AbstractController
                         $pdfFilename
                     );
 
-                    // Création de l'entité LivrePdf
                     $livrePdf = new LivrePdf();
                     $livrePdf->setFichier($pdfFilename);
-                    
-                    // La méthode setPdf() dans Livre.php gère la liaison bidirectionnelle
                     $livre->setPdf($livrePdf); 
 
                 } catch (FileException $e) {
@@ -134,14 +138,11 @@ final class LivreController extends AbstractController
                 $pdfFilename = uniqid().'.'.$pdfFile->guessExtension();
                 $pdfFile->move($this->getParameter('pdf_directory'), $pdfFilename);
 
-                // Vérifier si un PDF existe déjà pour le mettre à jour, sinon en créer un
                 $livrePdf = $livre->getPdf();
-                
                 if (!$livrePdf) {
                     $livrePdf = new LivrePdf();
-                    $livre->setPdf($livrePdf); // Lier le nouveau PDF au livre
+                    $livre->setPdf($livrePdf); 
                 }
-                
                 $livrePdf->setFichier($pdfFilename);
             }
 
@@ -171,21 +172,46 @@ final class LivreController extends AbstractController
         return $this->redirectToRoute('app_livre_index');
     }
 
-    // --- TÉLÉCHARGEMENT PDF (Utilisateur connecté) ---
+    // --- TÉLÉCHARGEMENT PDF (Utilisateur connecté & Achat vérifié) ---
     #[Route('/{id}/telecharger', name: 'app_livre_download')]
     #[IsGranted('ROLE_USER')] 
-    public function telecharger(Livre $livre): Response
+    public function telecharger(Livre $livre, EntityManagerInterface $em): Response
     {
-        // Vérification de sécurité : y a-t-il un PDF lié ?
+        // 1. Vérification basique
         if (!$livre->getPdf()) {
              throw $this->createNotFoundException('Aucun fichier PDF n\'est associé à ce livre.');
         }
 
-        // Chemin complet vers le fichier
+        // 2. SÉCURITÉ : L'utilisateur a-t-il acheté ce PDF ?
+        $user = $this->getUser();
+
+        // On cherche une ligne de commande qui correspond à :
+        // - Ce livre
+        // - Cet utilisateur
+        // - Type 'pdf'
+        // - Statut de la commande 'VALIDE'
+        $achat = $em->getRepository(LigneCommande::class)->createQueryBuilder('lc')
+            ->join('lc.commande', 'c')
+            ->where('c.user = :user')
+            ->andWhere('lc.livre = :livre')
+            ->andWhere('lc.type = :type') // On vérifie bien le type PDF
+            ->andWhere('c.statut = :statut')
+            ->setParameter('user', $user)
+            ->setParameter('livre', $livre)
+            ->setParameter('type', 'pdf')
+            ->setParameter('statut', 'VALIDE')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        // Si aucun achat trouvé, on bloque
+        if (!$achat) {
+            throw $this->createAccessDeniedException('Vous devez acheter la version numérique pour télécharger ce fichier.');
+        }
+
+        // 3. Téléchargement autorisé
         $pdfPath = $this->getParameter('pdf_directory').'/'.$livre->getPdf()->getFichier();
 
-        // Retourne le fichier en téléchargement forcé
-        // Le 2ème argument est le nom que verra l'utilisateur lors du téléchargement
         return $this->file($pdfPath, $livre->getTitre() . '.pdf');
     }
 }

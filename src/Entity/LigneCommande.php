@@ -21,6 +21,11 @@ class LigneCommande
     #[ORM\Column]
     private float $prixUnitaire;
 
+    // --- NOUVEAU CHAMP AJOUTÉ ---
+    #[ORM\Column(length: 20)]
+    private ?string $type = null; // stockera 'physique' ou 'pdf'
+    // ----------------------------
+
     #[ORM\ManyToOne(inversedBy: 'ligneCommandes')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Commande $commande = null;
@@ -72,6 +77,19 @@ class LigneCommande
         $this->prixUnitaire = $prixUnitaire;
         return $this;
     }
+
+    // --- GETTER & SETTER POUR TYPE ---
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+        return $this;
+    }
+    // ---------------------------------
 
     // ----------------- Relations -----------------
 

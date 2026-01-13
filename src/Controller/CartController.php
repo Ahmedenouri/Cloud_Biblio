@@ -149,6 +149,10 @@ class CartController extends AbstractController
                     $ligne->setQuantite($details['quantity']);
                     $ligne->setPrixUnitaire($prixUnitaire); // On utilise le prix calculé
                     
+                    // --- AJOUT IMPORTANT : ON SAUVEGARDE LE TYPE ('achat' ou 'pdf') ---
+                    $ligne->setType($details['type']);
+                    // ------------------------------------------------------------------
+
                     // ON NE DÉCRÉMENTE LE STOCK QUE SI C'EST PHYSIQUE
                     if ($details['type'] === 'achat') {
                         $livre->setStock($livre->getStock() - $details['quantity']);
