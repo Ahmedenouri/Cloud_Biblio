@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white !important;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .button:hover {
+            background: #5568d3;
+        }
+        .footer {
+            background: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        .link-text {
+            word-break: break-all;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Bienvenue à la Bibliothèque</h1>
+        </div>
+        
+        <div class="content">
+            <p>Bonjour,</p>
+            
+            <p>Merci de vous être inscrit sur notre plateforme de gestion de bibliothèque.</p>
+            
+            <p>Pour activer votre compte, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous :</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ verificationUrl }}" class="button">Confirmer mon email</a>
+            </div>
+            
+            <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
+                <span class="link-text">{{ verificationUrl }}</span>
+            </p>
+            
+            <p style="margin-top: 30px;">Si vous n'avez pas créé de compte, vous pouvez ignorer cet email en toute sécurité.</p>
+            
+            <p style="margin-top: 30px;">
+                Cordialement,<br>
+                <strong>L'équipe Bibliothèque</strong>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+        </div>
+    </div>
+</body>
+</html>

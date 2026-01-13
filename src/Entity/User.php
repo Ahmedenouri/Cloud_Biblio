@@ -16,7 +16,6 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    // ----------------- Champs -----------------
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -36,6 +35,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'boolean')]
     private bool $isVerified = false;
+
+    #[ORM\Column(type: 'string', length: 64, nullable: true)]
+    private ?string $verificationToken = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $profile = null;
@@ -57,7 +59,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime')]
     private \DateTimeInterface $updatedAt;
 
-    // ----------------- Constructeur -----------------
     public function __construct()
     {
         $this->commandes = new ArrayCollection();
@@ -69,7 +70,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->updatedAt = new \DateTime();
     }
 
-    // ----------------- Security -----------------
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
@@ -82,7 +82,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return array_unique($roles);
     }
 
-    public function setRoles(array $roles): self
+    public function setRoles(array $roles): static
     {
         $this->roles = $roles;
         return $this;
@@ -93,7 +93,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return (string) $this->password;
     }
 
-    public function setPassword(string $password): self
+    public function setPassword(string $password): static
     {
         $this->password = $password;
         return $this;
@@ -101,7 +101,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
-        // Rien à effacer
     }
 
     public function isVerified(): bool
@@ -109,13 +108,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->isVerified;
     }
 
-    public function setIsVerified(bool $isVerified): self
+    public function setIsVerified(bool $isVerified): static
     {
         $this->isVerified = $isVerified;
         return $this;
     }
 
-    // ----------------- Getters / Setters -----------------
+    public function getVerificationToken(): ?string
+    {
+        return $this->verificationToken;
+    }
+
+    public function setVerificationToken(?string $verificationToken): static
+    {
+        $this->verificationToken = $verificationToken;
+        return $this;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -126,7 +135,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->nom;
     }
 
-    public function setNom(string $nom): self
+    public function setNom(string $nom): static
     {
         $this->nom = $nom;
         return $this;
@@ -137,7 +146,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
-    public function setEmail(string $email): self
+    public function setEmail(string $email): static
     {
         $this->email = $email;
         return $this;
@@ -148,7 +157,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->profile;
     }
 
-    public function setProfile(?string $profile): self
+    public function setProfile(?string $profile): static
     {
         $this->profile = $profile;
         return $this;
@@ -158,7 +167,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->createdAt;
     }
-    public function setCreatedAt(\DateTimeInterface $createdAt): self
+    
+    public function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
         return $this;
@@ -168,20 +178,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->updatedAt;
     }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): self
+    
+    public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
         return $this;
     }
 
-    // ----------------- Collections -----------------
-    /** @return Collection<int, Commande> */
     public function getCommandes(): Collection
     {
         return $this->commandes;
     }
 
-    public function addCommande(Commande $commande): self
+    public function addCommande(Commande $commande): static
     {
         if (!$this->commandes->contains($commande)) {
             $this->commandes->add($commande);
@@ -190,7 +199,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function removeCommande(Commande $commande): self
+    public function removeCommande(Commande $commande): static
     {
         if ($this->commandes->removeElement($commande)) {
             if ($commande->getUser() === $this) {
@@ -200,13 +209,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /** @return Collection<int, Emprunt> */
     public function getEmprunts(): Collection
     {
         return $this->emprunts;
     }
 
-    public function addEmprunt(Emprunt $emprunt): self
+    public function addEmprunt(Emprunt $emprunt): static
     {
         if (!$this->emprunts->contains($emprunt)) {
             $this->emprunts->add($emprunt);
@@ -215,7 +223,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function removeEmprunt(Emprunt $emprunt): self
+    public function removeEmprunt(Emprunt $emprunt): static
     {
         if ($this->emprunts->removeElement($emprunt)) {
             if ($emprunt->getUser() === $this) {
@@ -225,13 +233,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /** @return Collection<int, Emprunt> */
     public function getEmpruntsValides(): Collection
     {
         return $this->empruntsValides;
     }
 
-    public function addEmpruntValide(Emprunt $emprunt): self
+    public function addEmpruntValide(Emprunt $emprunt): static
     {
         if (!$this->empruntsValides->contains($emprunt)) {
             $this->empruntsValides->add($emprunt);
@@ -240,7 +247,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function removeEmpruntValide(Emprunt $emprunt): self
+    public function removeEmpruntValide(Emprunt $emprunt): static
     {
         if ($this->empruntsValides->removeElement($emprunt)) {
             if ($emprunt->getBibliothecaire() === $this) {

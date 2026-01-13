@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Verify your email{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="h3 mb-3 font-weight-normal">Success!</h2>
+                    <p>
+                        An email has been sent to your address provided.
+                        Please check your inbox and click the link to verify your account.
+                    </p>
+                    <p class="text-muted">
+                        Only after verification will you be able to log in.
+                    </p>
+                    <a href="{{ path('app_login') }}" class="btn btn-outline-secondary mt-3">Back to Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
