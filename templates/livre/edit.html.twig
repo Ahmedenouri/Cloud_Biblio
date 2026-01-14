@@ -1,13 +1,92 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit Livre{% endblock %}
+{% block title %}Modifier {{ livre.titre }} | BiblioHub{% endblock %}
 
 {% block body %}
-    <h1>Edit Livre</h1>
+<div class="min-h-screen bg-[#F5F1E6] py-12 px-4 flex items-center justify-center">
+    
+    {# CONTENEUR PRINCIPAL RÉDUIT #}
+    <div class="w-full max-w-2xl bg-white rounded-3xl shadow-xl overflow-hidden border border-[#8B5E3C]/10">
+        
+        {# HEADER DU FORMULAIRE #}
+        <div class="bg-[#8B5E3C] p-6 text-center">
+            <h1 class="text-2xl font-bold text-[#F5F1E6] flex items-center justify-center gap-3">
+                <span>✏️</span> Modifier l'ouvrage
+            </h1>
+            <p class="text-[#F5F1E6]/70 text-xs mt-1 uppercase tracking-widest font-medium">Fiche technique : {{ livre.titre }}</p>
+        </div>
 
-    {{ include('livre/_form.html.twig', {'button_label': 'Update'}) }}
+        <div class="p-8 sm:p-10">
+            
+            {# FORMULAIRE SYMFONY #}
+            {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+                
+                {# Erreurs globales #}
+                <div class="text-red-500 text-sm font-bold">{{ form_errors(form) }}</div>
 
-    <a href="{{ path('app_livre_index') }}">back to list</a>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {# TITRE (Pleine largeur) #}
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="block text-[#8B5E3C] text-xs font-black uppercase mb-2">Titre du livre</label>
+                        {{ form_widget(form.titre, {'attr': {'class': 'w-full bg-[#F5F1E6]/30 border border-[#8B5E3C]/20 rounded-xl px-4 py-3 focus:border-[#A67C52] focus:ring-1 focus:ring-[#A67C52] outline-none transition'}}) }}
+                    </div>
 
-    {{ include('livre/_delete_form.html.twig') }}
+                    {# CATEGORIE #}
+                    <div>
+                        <label class="block text-[#8B5E3C] text-xs font-black uppercase mb-2">Catégorie</label>
+                        {{ form_widget(form.categorie, {'attr': {'class': 'w-full bg-[#F5F1E6]/30 border border-[#8B5E3C]/20 rounded-xl px-4 py-3 focus:border-[#A67C52] outline-none transition'}}) }}
+                    </div>
+
+                    {# PRIX #}
+                    <div>
+                        <label class="block text-[#8B5E3C] text-xs font-black uppercase mb-2">Prix (MAD)</label>
+                        {{ form_widget(form.prix, {'attr': {'class': 'w-full bg-[#F5F1E6]/30 border border-[#8B5E3C]/20 rounded-xl px-4 py-3 focus:border-[#A67C52] outline-none transition'}}) }}
+                    </div>
+
+                    {# STOCK (Mise en avant dans un bloc beige) #}
+                    <div class="col-span-1 md:col-span-2 bg-[#F5F1E6]/50 p-4 rounded-2xl border border-[#8B5E3C]/10">
+                        <label class="block text-[#8B5E3C] text-xs font-black uppercase mb-2 italic">Quantité en stock physique</label>
+                        {{ form_widget(form.stock, {'attr': {'class': 'w-full bg-white border border-[#8B5E3C]/20 rounded-xl px-4 py-3 focus:border-[#A67C52] outline-none transition'}}) }}
+                    </div>
+
+                    {# DESCRIPTION #}
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="block text-[#8B5E3C] text-xs font-black uppercase mb-2">Résumé / Description</label>
+                        {{ form_widget(form.description, {'attr': {'class': 'w-full bg-[#F5F1E6]/30 border border-[#8B5E3C]/20 rounded-xl px-4 py-3 h-32 outline-none focus:border-[#A67C52] transition', 'placeholder': 'Décrivez l\'ouvrage...'}}) }}
+                    </div>
+
+                    {# FICHIERS #}
+                    <div class="col-span-1 md:col-span-2 border-t border-gray-100 pt-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[#8B5E3C] text-xs font-black uppercase mb-2">Changer l'image</label>
+                                {{ form_widget(form.imageFile, {'attr': {'class': 'text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#8B5E3C] file:text-white hover:file:bg-[#A67C52]'}}) }}
+                            </div>
+                            <div>
+                                <label class="block text-[#8B5E3C] text-xs font-black uppercase mb-2">Changer le PDF</label>
+                                {{ form_widget(form.pdfFile, {'attr': {'class': 'text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#8B5E3C] file:text-white hover:file:bg-[#A67C52]'}}) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# BOUTONS D'ACTION #}
+                <div class="pt-8 flex flex-col sm:flex-row gap-4">
+                    <button class="flex-1 bg-[#8B5E3C] hover:bg-[#A67C52] text-white font-bold py-4 rounded-2xl shadow-lg transition transform hover:-translate-y-1">
+                        Mettre à jour le livre
+                    </button>
+                    <a href="{{ path('app_livre_index') }}" class="flex-1 bg-white border-2 border-[#8B5E3C] text-[#8B5E3C] hover:bg-[#F5F1E6] font-bold py-4 rounded-2xl transition text-center">
+                        Annuler
+                    </a>
+                </div>
+
+            {{ form_end(form) }}
+
+            {# BOUTON SUPPRIMER (Discret en bas) #}
+            <div class="mt-10 pt-6 border-t border-gray-100 flex justify-center">
+                {{ include('livre/_delete_form.html.twig') }}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

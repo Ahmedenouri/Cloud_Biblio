@@ -16,28 +16,40 @@ class EmpruntRepository extends ServiceEntityRepository
         parent::__construct($registry, Emprunt::class);
     }
 
-    //    /**
-    //     * @return Emprunt[] Returns an array of Emprunt objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('e')
-    //            ->andWhere('e.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('e.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Compte les emprunts par mois pour l'année en cours
+     */
+    public function countEmpruntsParMois(): array
+    {
+        // 1. On récupère TOUS les emprunts de l'année en cours
+        // On évite SUBSTRING qui peut échouer selon la config de la BDD
+        $emprunts = $this->createQueryBuilder('e')
+            ->select('e.dateEmprunt')
+            ->where('e.dateEmprunt LIKE :year')
+            ->setParameter('year', date('Y') . '-%')
+            ->getQuery()
+            ->getResult();
 
-    //    public function findOneBySomeField($value): ?Emprunt
-    //    {
-    //        return $this->createQueryBuilder('e')
-    //            ->andWhere('e.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        // 2. On prépare un tableau de 12 mois remplis de zéros
+        $data = array_fill(0, 12, 0);
+        
+        // 3. On trie les résultats manuellement en PHP
+        foreach ($emprunts as $emprunt) {
+            // On extrait le mois de l'objet DateTime ou de la chaîne
+            $date = $emprunt['dateEmprunt'];
+            
+            if ($date instanceof \DateTimeInterface) {
+                $monthIndex = (int)$date->format('m') - 1;
+            } else {
+                // Si c'est une chaîne (ex: "2024-05-12")
+                $monthIndex = (int)date('m', strtotime($date)) - 1;
+            }
+
+            if ($monthIndex >= 0 && $monthIndex < 12) {
+                $data[$monthIndex]++;
+            }
+        }
+
+        return $data;
+    }
 }

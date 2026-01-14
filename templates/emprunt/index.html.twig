@@ -1,60 +1,134 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Gestion des Emprunts{% endblock %}
+{% block title %}Gestion des Emprunts | Staff{% endblock %}
 
 {% block body %}
 <div class="max-w-7xl mx-auto px-6 py-10 min-h-screen">
-    <h1 class="text-3xl font-bold text-biblio-dark mb-8">Gestion des Emprunts (Staff)</h1>
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-biblio-dark">🛠️ Gestion des Emprunts</h1>
+        <div class="text-sm text-gray-500">
+            <span class="inline-block w-3 h-3 bg-yellow-100 border border-yellow-300 rounded-full mr-1"></span> En attente
+            <span class="inline-block w-3 h-3 bg-red-100 border border-red-300 rounded-full ml-3 mr-1"></span> En Retard
+        </div>
+    </div>
 
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <table class="min-w-full">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Utilisateur</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Livre</th>
-                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Statut</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                {% for emprunt in emprunts %}
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 text-sm text-gray-500">
-                            {{ emprunt.dateEmprunt|date('d/m/Y') }}
-                        </td>
-                        <td class="px-6 py-4 text-sm font-bold text-gray-700">
-                            {{ emprunt.user.nom }} <br>
-                            <span class="text-xs text-gray-400 font-normal">{{ emprunt.user.email }}</span>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">
-                            {{ emprunt.livre.titre }}
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            {% if emprunt.statut == 'EN_ATTENTE' %}
-                                <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded">En attente</span>
-                            {% elseif emprunt.statut == 'VALIDE' %}
-                                <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">Validé</span>
-                            {% elseif emprunt.statut == 'REFUSE' %}
-                                <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">Refusé</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 text-right text-sm font-medium">
-                            {% if emprunt.statut == 'EN_ATTENTE' %}
-                                <a href="{{ path('app_emprunt_valider', {'id': emprunt.id}) }}" class="text-green-600 hover:text-green-900 mr-3 font-bold">Valider</a>
-                                <a href="{{ path('app_emprunt_refuser', {'id': emprunt.id}) }}" class="text-red-600 hover:text-red-900 font-bold" onclick="return confirm('Refuser cet emprunt ?')">Refuser</a>
-                            {% else %}
-                                <span class="text-gray-400 text-xs">Traité par {{ emprunt.bibliothecaire ? emprunt.bibliothecaire.nom : 'Système' }}</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% else %}
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm text-left">
+                <thead class="bg-gray-50 text-gray-500 uppercase font-bold border-b border-gray-200">
                     <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">Aucune demande d'emprunt.</td>
+                        <th class="px-6 py-4">Client</th>
+                        <th class="px-6 py-4">Livre</th>
+                        <th class="px-6 py-4">Dates</th>
+                        <th class="px-6 py-4 text-center">État & Amende</th>
+                        <th class="px-6 py-4 text-right">Actions Staff</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for emprunt in emprunts %}
+                        {# Calcul du retard uniquement si le livre est EN_COURS #}
+                        {% set isLate = false %}
+                        {% if emprunt.statut == 'EN_COURS' and emprunt.dateRetourPrevue %}
+                            {% set isLate = "now"|date('Y-m-d') > emprunt.dateRetourPrevue|date('Y-m-d') %}
+                        {% endif %}
+
+                        <tr class="hover:bg-gray-50 transition {% if isLate %}bg-red-50{% endif %}">
+                            
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-800">{{ emprunt.user.nom }}</div>
+                                <div class="text-xs text-gray-500">{{ emprunt.user.email }}</div>
+                            </td>
+
+                            <td class="px-6 py-4 font-medium text-gray-700">
+                                {{ emprunt.livre.titre }}
+                            </td>
+                            
+                            <td class="px-6 py-4">
+                                {% if emprunt.statut == 'EN_ATTENTE' %}
+                                    <span class="text-gray-400 italic text-xs">En attente de validation...</span>
+                                {% elseif emprunt.dateRetourPrevue %}
+                                    <div class="flex flex-col text-xs">
+                                        <span>Du : {{ emprunt.dateEmprunt|date('d/m/Y') }}</span>
+                                        <span class="font-bold mt-1 {% if isLate %}text-red-600{% endif %}">
+                                            Au : {{ emprunt.dateRetourPrevue|date('d/m/Y') }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                {% if emprunt.statut == 'EN_ATTENTE' %}
+                                    <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200">
+                                        ⏳ Nouvelle Demande
+                                    </span>
+                                
+                                {% elseif emprunt.statut == 'EN_COURS' %}
+                                    {% if isLate %}
+                                        <div class="bg-red-100 text-red-800 px-3 py-1 rounded-lg text-xs font-bold border border-red-200 animate-pulse">
+                                            ⚠️ RETARD
+                                        </div>
+                                    {% else %}
+                                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold border border-blue-200">
+                                            📖 En cours
+                                        </span>
+                                    {% endif %}
+
+                                {% elseif emprunt.statut == 'RENDU' %}
+                                    <div class="flex flex-col items-center">
+                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold border border-green-200">
+                                            ✅ Rendu
+                                        </span>
+                                        {% if emprunt.amende > 0 %}
+                                            <span class="text-red-600 font-bold text-xs mt-1">
+                                                Amende : {{ emprunt.amende }} MAD
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                
+                                {% elseif emprunt.statut == 'REFUSE' %}
+                                    <span class="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs border border-gray-300">
+                                        ❌ Refusé
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="px-6 py-4 text-right">
+                                
+                                {# Cas 1 : Nouvelle demande à valider #}
+                                {% if emprunt.statut == 'EN_ATTENTE' %}
+                                    <div class="flex justify-end gap-2">
+                                        <a href="{{ path('app_emprunt_valider', {'id': emprunt.id}) }}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-bold shadow transition">
+                                            Valider
+                                        </a>
+                                        <a href="{{ path('app_emprunt_refuser', {'id': emprunt.id}) }}" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold shadow transition" onclick="return confirm('Refuser cette demande ? Le stock sera rétabli.')">
+                                            Refuser
+                                        </a>
+                                    </div>
+                                
+                                {# Cas 2 : Emprunt en cours à clôturer #}
+                                {% elseif emprunt.statut == 'EN_COURS' %}
+                                    <a href="{{ path('app_emprunt_retour_admin', {'id': emprunt.id}) }}" 
+                                       class="bg-biblio-dark hover:bg-[#6d4c41] text-white px-4 py-2 rounded font-bold shadow text-xs flex items-center justify-end gap-2 ml-auto w-fit"
+                                       onclick="return confirm('Confirmer que le livre a été rendu ? Si la date est dépassée, une amende sera générée.')">
+                                       <span>📦</span> Confirmer Retour
+                                    </a>
+
+                                {% else %}
+                                    <span class="text-gray-400 text-xs italic">Aucune action</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500 italic bg-gray-50">
+                                <p class="text-2xl mb-2">📭</p>
+                                Aucun emprunt en cours ou en attente.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

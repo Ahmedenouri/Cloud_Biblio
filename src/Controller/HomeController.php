@@ -12,9 +12,12 @@ final class HomeController extends AbstractController
     #[Route('/', name: 'app_home')]
     public function index(LivreRepository $livreRepository): Response
     {
-        // Récupère tous les livres pour les afficher sur la page d'accueil
+        // On récupère les livres triés par ID décroissant (les derniers ajoutés en premier)
+        // C'est mieux pour un catalogue dynamique !
+        $livres = $livreRepository->findBy([], ['id' => 'DESC']);
+
         return $this->render('home/index.html.twig', [
-            'livres' => $livreRepository->findAll(),
+            'livres' => $livres,
         ]);
     }
 }

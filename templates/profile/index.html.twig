@@ -1,0 +1,261 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Profil | BiblioHub{% endblock %}
+
+{% block body %}
+{# --- FOND CRÉATIF ANIMÉ --- #}
+<div class="min-h-screen bg-[#F5F1E6] py-12 px-4 flex items-center justify-center relative overflow-hidden">
+    {# Blobs d'arrière-plan #}
+    <div class="absolute top-0 left-0 w-96 h-96 bg-[#8B5E3C] rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-blob"></div>
+    <div class="absolute top-0 right-0 w-96 h-96 bg-[#A67C52] rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-blob animation-delay-2000"></div>
+    <div class="absolute -bottom-32 left-20 w-96 h-96 bg-[#8B5E3C] rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-blob animation-delay-4000"></div>
+
+    <div class="w-full max-w-2xl bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/50 relative z-10 transition-all duration-500 hover:shadow-[#8B5E3C]/20">
+        
+        {# --- HEADER (Photo + Liens cliquables) --- #}
+        <div class="bg-gradient-to-b from-[#8B5E3C] to-[#6d462c] p-10 text-center relative overflow-hidden">
+            {# Motif de fond subtil #}
+            <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\' fill-rule=\'evenodd\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'3\'/%3E%3Ccircle cx=\'13\' cy=\'13\' r=\'3\'/%3E%3C/g%3E%3C/svg%3E');"></div>
+
+            <div class="relative inline-block group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-white to-[#A67C52] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                
+                {% if app.user.profile and app.user.profile != 'default.png' %}
+                    <img id="profile-preview" src="{{ asset('uploads/profiles/' ~ app.user.profile) }}" class="relative w-32 h-32 rounded-full border-4 border-white object-cover shadow-xl mx-auto transition-transform duration-500 group-hover:scale-105">
+                {% else %}
+                    <div id="profile-placeholder" class="relative w-32 h-32 bg-[#F5F1E6] rounded-full mx-auto flex items-center justify-center text-5xl border-4 border-white shadow-xl transition-transform duration-500 group-hover:scale-105">👤</div>
+                    <img id="profile-preview" src="" class="hidden w-32 h-32 rounded-full border-4 border-white object-cover shadow-xl mx-auto">
+                {% endif %}
+                
+                {# Bouton Caméra (Trigger) #}
+                <button type="button" id="btn-photo-trigger" onclick="document.getElementById('{{ form.photo.vars.id }}').click()" class="hidden absolute bottom-0 right-0 bg-white p-3 rounded-full shadow-lg hover:scale-110 transition border border-[#8B5E3C]/20 text-[#8B5E3C] group-hover:rotate-12">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
+            </div>
+
+            <h1 class="text-2xl font-black text-white uppercase mt-4 tracking-widest drop-shadow-md">{{ app.user.nom }}</h1>
+            
+            {# --- BOUTONS SOCIAUX (LIENS REELS) --- #}
+            <div class="flex justify-center gap-3 mt-6">
+                {% for platform, link in {'facebook': app.user.facebook, 'instagram': app.user.instagram, 'linkedin': app.user.linkedin, 'x': app.user.x} %}
+                    {% if link %}
+                        {# Logique intelligente pour créer le lien si l'utilisateur n'a mis que le pseudo #}
+                        {% set url = link starts with 'http' ? link : (platform == 'instagram' ? 'https://instagram.com/' ~ link : 'https://' ~ link) %}
+                        
+                        <a href="{{ url }}" target="_blank" class="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white text-white hover:text-[#8B5E3C] rounded-full backdrop-blur-sm transition-all duration-300 transform hover:-translate-y-2 hover:shadow-lg border border-white/20">
+                            <i class="fa-brands fa-{{ platform == 'x' ? 'x-twitter' : (platform == 'facebook' ? 'facebook-f' : (platform == 'linkedin' ? 'linkedin-in' : platform)) }}"></i>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="p-8 sm:p-10 relative">
+            
+            {# --- MODE LECTURE (VIEW) --- #}
+            <div id="view-mode" class="space-y-6 animate-fade-in">
+                
+                {# 1. Infos Principales #}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="group bg-gradient-to-br from-[#F5F1E6]/50 to-white p-4 rounded-2xl border border-[#8B5E3C]/10 hover:border-[#8B5E3C]/30 transition-all duration-300">
+                        <p class="text-[10px] font-black uppercase text-[#8B5E3C] mb-1 flex items-center gap-2"><i class="fa-solid fa-user"></i> Nom Complet</p>
+                        <p class="font-bold text-gray-800 pl-6">{{ app.user.nom }}</p>
+                    </div>
+                    <div class="group bg-gradient-to-br from-[#F5F1E6]/50 to-white p-4 rounded-2xl border border-[#8B5E3C]/10 hover:border-[#8B5E3C]/30 transition-all duration-300">
+                        <p class="text-[10px] font-black uppercase text-[#8B5E3C] mb-1 flex items-center gap-2"><i class="fa-solid fa-envelope"></i> Email</p>
+                        <p class="font-bold text-gray-800 pl-6">{{ app.user.email }}</p>
+                    </div>
+                </div>
+
+                {# 2. Liste des comptes connectés (Affichage des Usernames) #}
+                {% if app.user.facebook or app.user.instagram or app.user.linkedin or app.user.x %}
+                <div class="pt-6 border-t border-dashed border-[#8B5E3C]/20">
+                    <p class="text-[10px] font-black uppercase text-[#8B5E3C] mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-link"></i> Comptes connectés
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% if app.user.facebook %}
+                            <div class="flex items-center gap-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100 hover:bg-blue-50 transition-colors">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#1877F2] shrink-0">
+                                    <i class="fa-brands fa-facebook-f text-sm"></i>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700 truncate">{{ app.user.facebook }}</span>
+                            </div>
+                        {% endif %}
+
+                        {% if app.user.instagram %}
+                            <div class="flex items-center gap-3 p-3 bg-pink-50/50 rounded-xl border border-pink-100 hover:bg-pink-50 transition-colors">
+                                <div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-[#E1306C] shrink-0">
+                                    <i class="fa-brands fa-instagram text-sm"></i>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700 truncate">{{ app.user.instagram }}</span>
+                            </div>
+                        {% endif %}
+
+                        {% if app.user.linkedin %}
+                            <div class="flex items-center gap-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100 hover:bg-blue-50 transition-colors">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#0A66C2] shrink-0">
+                                    <i class="fa-brands fa-linkedin-in text-sm"></i>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700 truncate">{{ app.user.linkedin }}</span>
+                            </div>
+                        {% endif %}
+
+                        {% if app.user.x %}
+                            <div class="flex items-center gap-3 p-3 bg-gray-50/50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
+                                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-black shrink-0">
+                                    <i class="fa-brands fa-x-twitter text-sm"></i>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700 truncate">{{ app.user.x }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <button type="button" onclick="toggleMode()" class="group w-full mt-4 bg-white border-2 border-[#8B5E3C] text-[#8B5E3C] font-black py-4 rounded-2xl shadow-sm hover:bg-[#8B5E3C] hover:text-white transition-all duration-300 uppercase tracking-widest text-sm flex items-center justify-center gap-2 overflow-hidden relative">
+                    <span class="relative z-10 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square group-hover:rotate-12 transition-transform"></i> Modifier mon profil
+                    </span>
+                </button>
+            </div>
+
+            {# --- MODE ÉDITION (EDIT) --- #}
+            <div id="edit-mode" class="hidden animate-slide-up">
+                {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+                    
+                    <div class="text-red-500 font-bold mb-4 text-center text-sm">
+                        {{ form_errors(form) }}
+                    </div>
+
+                    <div class="hidden">{{ form_row(form.photo) }}</div>
+
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            {% for field in [form.nom, form.email] %}
+                                <div class="relative group">
+                                    {{ form_label(field, null, {'label_attr': {'class': 'text-[10px] font-black uppercase text-[#8B5E3C] mb-1 ml-1'}}) }}
+                                    {{ form_widget(field, {'attr': {'class': 'w-full bg-[#F5F1E6]/30 border border-[#8B5E3C]/10 rounded-xl p-3 focus:bg-white focus:ring-2 focus:ring-[#8B5E3C] focus:border-transparent transition-all duration-300 outline-none shadow-inner'}}) }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="pt-6 border-t border-dashed border-[#8B5E3C]/20">
+                            <p class="text-[10px] font-black uppercase text-[#8B5E3C] mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-link"></i> Mettre à jour les liens
+                            </p>
+                            
+                            <div class="grid grid-cols-1 gap-4">
+                                
+                                {# Facebook #}
+                                <div class="relative group">
+                                    <div class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center text-[#1877F2] border border-blue-100 shadow-sm z-10 pointer-events-none">
+                                        <i class="fa-brands fa-facebook-f text-sm"></i>
+                                    </div>
+                                    {{ form_widget(form.facebook, {'attr': {'class': 'w-full pl-14 bg-[#F5F1E6]/30 border border-[#8B5E3C]/10 rounded-xl p-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#1877F2]/50 transition-all placeholder-gray-400', 'placeholder': 'Username Facebook'}}) }}
+                                </div>
+
+                                {# Instagram #}
+                                <div class="relative group">
+                                    <div class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-pink-50 rounded-full flex items-center justify-center text-[#E1306C] border border-pink-100 shadow-sm z-10 pointer-events-none">
+                                        <i class="fa-brands fa-instagram text-sm"></i>
+                                    </div>
+                                    {{ form_widget(form.instagram, {'attr': {'class': 'w-full pl-14 bg-[#F5F1E6]/30 border border-[#8B5E3C]/10 rounded-xl p-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#E1306C]/50 transition-all placeholder-gray-400', 'placeholder': '@username'}}) }}
+                                </div>
+
+                                {# LinkedIn #}
+                                <div class="relative group">
+                                    <div class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center text-[#0A66C2] border border-blue-100 shadow-sm z-10 pointer-events-none">
+                                        <i class="fa-brands fa-linkedin-in text-sm"></i>
+                                    </div>
+                                    {{ form_widget(form.linkedin, {'attr': {'class': 'w-full pl-14 bg-[#F5F1E6]/30 border border-[#8B5E3C]/10 rounded-xl p-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#0A66C2]/50 transition-all placeholder-gray-400', 'placeholder': 'Lien LinkedIn'}}) }}
+                                </div>
+
+                                {# X (Twitter) #}
+                                <div class="relative group">
+                                    <div class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-black border border-gray-200 shadow-sm z-10 pointer-events-none">
+                                        <i class="fa-brands fa-x-twitter text-sm"></i>
+                                    </div>
+                                    {{ form_widget(form.x, {'attr': {'class': 'w-full pl-14 bg-[#F5F1E6]/30 border border-[#8B5E3C]/10 rounded-xl p-3 text-sm focus:bg-white focus:ring-2 focus:ring-black/20 transition-all placeholder-gray-400', 'placeholder': 'Username X'}}) }}
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 mt-8">
+                        <button type="button" onclick="toggleMode()" class="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-500 font-bold py-4 rounded-2xl uppercase text-xs tracking-widest transition-colors border border-gray-100">
+                            Annuler
+                        </button>
+                        
+                        {# Bouton Shine #}
+                        <button type="submit" class="btn-shine flex-[2] relative overflow-hidden bg-[#8B5E3C] text-white font-black py-4 rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-[#8B5E3C]/40 transition-all transform hover:-translate-y-0.5 uppercase text-xs tracking-widest group">
+                            <span class="relative z-10 flex items-center justify-center gap-2">
+                                <span>Enregistrer</span> <i class="fa-solid fa-check group-hover:scale-125 transition-transform"></i>
+                            </span>
+                            <div class="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[30deg] animate-shine"></div>
+                        </button>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleMode() {
+        const viewMode = document.getElementById('view-mode');
+        const editMode = document.getElementById('edit-mode');
+        const btnPhoto = document.getElementById('btn-photo-trigger');
+
+        if (editMode.classList.contains('hidden')) {
+            viewMode.classList.add('hidden');
+            editMode.classList.remove('hidden');
+            btnPhoto.classList.remove('hidden');
+        } else {
+            editMode.classList.add('hidden');
+            viewMode.classList.remove('hidden');
+            btnPhoto.classList.add('hidden');
+        }
+    }
+
+    document.getElementById('{{ form.photo.vars.id }}').onchange = evt => {
+        const [file] = evt.target.files;
+        if (file) {
+            const preview = document.getElementById('profile-preview');
+            const placeholder = document.getElementById('profile-placeholder');
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+            if(placeholder) placeholder.classList.add('hidden');
+        }
+    }
+</script>
+
+<style>
+    /* Animations fluides */
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); filter: blur(5px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+    .animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-fade-in { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    /* Shine effect */
+    @keyframes shine { 
+        0% { left: -100%; } 
+        20% { left: 100%; } 
+        100% { left: 100%; } 
+    }
+    .animate-shine { animation: shine 3s infinite; }
+
+    /* Blobs */
+    @keyframes blob {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0px, 0px) scale(1); }
+    }
+    .animate-blob { animation: blob 7s infinite; }
+    .animation-delay-2000 { animation-delay: 2s; }
+    .animation-delay-4000 { animation-delay: 4s; }
+</style>
+{% endblock %}

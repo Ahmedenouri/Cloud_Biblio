@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Livre;
 use App\Entity\LivrePdf;
-use App\Entity\LigneCommande; // Important pour la vérification
+use App\Entity\LigneCommande; 
 use App\Form\LivreType;
 use App\Repository\LivreRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,8 +20,10 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 #[Route('/livre')]
 final class LivreController extends AbstractController
 {
-    // --- ACCESSIBLE À TOUT LE MONDE (Public) ---
+    // --- GESTION (Sécurisé : Admin/Bibliothécaire seulement) ---
+    // C'est maintenant le "Back-Office" pour gérer les livres
     #[Route('/', name: 'app_livre_index', methods: ['GET'])]
+    #[IsGranted('ROLE_BIBLIOTHECAIRE')] 
     public function index(LivreRepository $livreRepository): Response
     {
         return $this->render('livre/index.html.twig', [
@@ -29,16 +31,14 @@ final class LivreController extends AbstractController
         ]);
     }
 
-    // --- CRÉATION (Admin/Bibliothécaire) ---
+    // --- CRÉATION (Sécurisé : Admin/Bibliothécaire seulement) ---
     #[Route('/new', name: 'app_livre_new', methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_BIBLIOTHECAIRE', message: 'Accès réservé au personnel.')]
     public function new(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
     {
         $livre = new Livre();
         
-        // CORRECTION IMPORTANTE :
-        // Comme on a retiré le champ "Type" du formulaire, on le force ici
-        // pour éviter l'erreur "Column 'type' cannot be null".
+        // Correctif pour éviter l'erreur SQL "Column 'type' cannot be null"
         $livre->setType('hybride'); 
 
         $form = $this->createForm(LivreType::class, $livre);
@@ -104,6 +104,7 @@ final class LivreController extends AbstractController
     }
 
     // --- DÉTAILS (Public) ---
+    // On laisse cette page publique pour que les visiteurs puissent voir les détails depuis l'accueil
     #[Route('/{id}', name: 'app_livre_show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(Livre $livre): Response
     {
@@ -112,7 +113,7 @@ final class LivreController extends AbstractController
         ]);
     }
 
-    // --- ÉDITION (Admin/Bibliothécaire) ---
+    // --- ÉDITION (Sécurisé : Admin/Bibliothécaire seulement) ---
     #[Route('/{id}/edit', name: 'app_livre_edit', methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_BIBLIOTHECAIRE')]
     public function edit(Request $request, Livre $livre, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
@@ -158,7 +159,7 @@ final class LivreController extends AbstractController
         ]);
     }
 
-    // --- SUPPRESSION (Admin/Bibliothécaire) ---
+    // --- SUPPRESSION (Sécurisé : Admin/Bibliothécaire seulement) ---
     #[Route('/{id}', name: 'app_livre_delete', methods: ['POST'])]
     #[IsGranted('ROLE_BIBLIOTHECAIRE')]
     public function delete(Request $request, Livre $livre, EntityManagerInterface $entityManager): Response
@@ -172,29 +173,24 @@ final class LivreController extends AbstractController
         return $this->redirectToRoute('app_livre_index');
     }
 
-    // --- TÉLÉCHARGEMENT PDF (Utilisateur connecté & Achat vérifié) ---
+    // --- TÉLÉCHARGEMENT PDF (Sécurisé : Vérifie l'achat) ---
     #[Route('/{id}/telecharger', name: 'app_livre_download')]
     #[IsGranted('ROLE_USER')] 
     public function telecharger(Livre $livre, EntityManagerInterface $em): Response
     {
-        // 1. Vérification basique
+        // 1. Le livre a-t-il un PDF ?
         if (!$livre->getPdf()) {
              throw $this->createNotFoundException('Aucun fichier PDF n\'est associé à ce livre.');
         }
 
-        // 2. SÉCURITÉ : L'utilisateur a-t-il acheté ce PDF ?
+        // 2. L'utilisateur connecté a-t-il acheté ce PDF spécifique ?
         $user = $this->getUser();
 
-        // On cherche une ligne de commande qui correspond à :
-        // - Ce livre
-        // - Cet utilisateur
-        // - Type 'pdf'
-        // - Statut de la commande 'VALIDE'
         $achat = $em->getRepository(LigneCommande::class)->createQueryBuilder('lc')
             ->join('lc.commande', 'c')
             ->where('c.user = :user')
             ->andWhere('lc.livre = :livre')
-            ->andWhere('lc.type = :type') // On vérifie bien le type PDF
+            ->andWhere('lc.type = :type') // Important : vérifie le type PDF
             ->andWhere('c.statut = :statut')
             ->setParameter('user', $user)
             ->setParameter('livre', $livre)
@@ -204,12 +200,11 @@ final class LivreController extends AbstractController
             ->getQuery()
             ->getOneOrNullResult();
 
-        // Si aucun achat trouvé, on bloque
         if (!$achat) {
             throw $this->createAccessDeniedException('Vous devez acheter la version numérique pour télécharger ce fichier.');
         }
 
-        // 3. Téléchargement autorisé
+        // 3. Téléchargement
         $pdfPath = $this->getParameter('pdf_directory').'/'.$livre->getPdf()->getFichier();
 
         return $this->file($pdfPath, $livre->getTitre() . '.pdf');

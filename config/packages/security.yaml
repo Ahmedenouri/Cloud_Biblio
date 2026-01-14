@@ -10,8 +10,7 @@ security:
                 class: App\Entity\User
                 property: email
 
-    # Hiérarchie des rôles (C'est ici que la magie opère !)
-    # L'ADMIN hérite automatiquement des droits du BIBLIOTHECAIRE
+    # Hiérarchie des rôles
     role_hierarchy:
         ROLE_BIBLIOTHECAIRE: [ROLE_USER]
         ROLE_ADMIN:          [ROLE_BIBLIOTHECAIRE]
@@ -31,7 +30,7 @@ security:
                 login_path: app_login
                 check_path: app_login
                 enable_csrf: true
-                default_target_path: app_home # Redirection après login
+                default_target_path: app_livre_index # J'ai mis le catalogue en accueil après login
 
             # Logout
             logout:
@@ -43,10 +42,23 @@ security:
                 secret: '%kernel.secret%'
                 lifetime: 604800 # 1 semaine
 
-    # Contrôle d'accès
+    # --- C'EST ICI QUE TOUT SE JOUE ---
     access_control:
+        # 1. PROTECTION ADMINISTRATION (Ajout / Modif)
+        # Seul le bibliothécaire peut accéder à /livre/new et /livre/edit
+        - { path: ^/livre/new, roles: ROLE_BIBLIOTHECAIRE }
+        - { path: ^/livre/\d+/edit, roles: ROLE_BIBLIOTHECAIRE }
         - { path: ^/admin, roles: ROLE_ADMIN }
-        # On laisse l'accueil, le login et le register ouverts à tous
+
+        # 2. PROTECTION UTILISATEUR (Panier / Commandes / Téléchargement)
+        # Il faut être connecté pour voir son panier ou ses achats
+        - { path: ^/cart, roles: ROLE_USER }
+        - { path: ^/mes-demandes, roles: ROLE_USER }
+        - { path: ^/livre/\d+/telecharger, roles: ROLE_USER }
+
+        # 3. PUBLIC (Tout le reste)
+        # Login, Register, Catalogue (Index) et Détails livre restent accessibles
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
+        # Cette dernière règle laisse passer tout le reste (Catalogue, Accueil...)
         - { path: ^/, roles: PUBLIC_ACCESS }

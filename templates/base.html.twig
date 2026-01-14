@@ -4,6 +4,10 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{% block title %}BiblioHub{% endblock %}</title>
+        
+        {# --- AJOUT FONT AWESOME (POUR LES ICÔNES) --- #}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>📚</text></svg>">
         
         {# --- CONFIGURATION TAILWIND CSS --- #}
@@ -14,8 +18,9 @@
               extend: {
                 colors: {
                   biblio: {
-                    dark: '#8B5E3C',  /* Marron foncé demandé */
-                    light: '#F5F1E6', /* Beige clair demandé */
+                    dark: '#8B5E3C',  /* Marron foncé */
+                    light: '#F5F1E6', /* Beige clair */
+                    accent: '#A67C52', /* Marron clair */
                   }
                 }
               }
@@ -30,45 +35,52 @@
     </head>
     <body class="bg-biblio-light font-sans text-gray-800 flex flex-col min-h-screen">
         
-        {# --- NAVBAR GLOBALE (Fond Marron #8B5E3C) --- #}
+        {# --- NAVBAR GLOBALE --- #}
         <nav class="bg-biblio-dark shadow-lg sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20">
                     
                     <div class="flex items-center gap-8">
-                        <a href="{{ path('app_livre_index') }}" class="flex items-center gap-2 group">
+                        <a href="{{ path('app_home') }}" class="flex items-center gap-2 group">
                             <span class="text-3xl">📚</span>
                             <span class="text-2xl font-bold text-biblio-light group-hover:text-white transition">BiblioHub</span>
                         </a>
 
                         <div class="hidden md:flex items-center gap-6">
-                            <a href="{{ path('app_livre_index') }}" class="text-biblio-light hover:text-white font-bold text-lg transition border-b-2 border-transparent hover:border-biblio-light pb-1">
+                            {# 1. CATALOGUE PUBLIC #}
+                            <a href="{{ path('app_home') }}" class="text-biblio-light hover:text-white font-bold text-lg transition border-b-2 border-transparent hover:border-biblio-light pb-1">
                                 Catalogue
                             </a>
                             
+                            {# 2. ESPACE GESTION (Bibliothécaire & Admin) #}
                             {% if is_granted('ROLE_BIBLIOTHECAIRE') %}
-                                <span class="text-biblio-light/50 text-xl">|</span>
-                                <a href="{{ path('app_livre_new') }}" class="text-biblio-light hover:text-white font-medium transition flex items-center gap-1">
-                                    <span>⚙️</span> Gestion Livres
+                                <span class="text-biblio-light/30 text-xl">|</span>
+                                <a href="{{ path('app_livre_index') }}" class="text-biblio-light hover:text-white font-medium transition flex items-center gap-1">
+                                    <i class="fa-solid fa-gear"></i> Livres
                                 </a>
-                                {# Lien fictif, à activer si vous avez la route #}
-                                <a href="#" class="text-biblio-light hover:text-white font-medium transition flex items-center gap-1">
-                                    <span>📋</span> Gestion Emprunts
+                                <a href="{{ path('app_emprunt_index') }}" class="text-biblio-light hover:text-white font-medium transition flex items-center gap-1">
+                                    <i class="fa-solid fa-clipboard-list"></i> Emprunts
+                                </a>
+                            {% endif %}
+
+                            {# 3. DASHBOARD ADMIN (ADMIN UNIQUEMENT) #}
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <a href="{{ path('app_admin_dashboard') }}" class="bg-biblio-accent/30 text-white px-3 py-1 rounded-lg font-bold hover:bg-biblio-accent transition flex items-center gap-2 border border-biblio-accent/50">
+                                    <i class="fa-solid fa-chart-line"></i> Dashboard
                                 </a>
                             {% endif %}
                         </div>
                     </div>
 
                     <div class="flex items-center gap-4">
-                        
                         {% if app.user %}
                             <a href="{{ path('app_mes_demandes') }}" class="hidden md:flex items-center gap-2 bg-biblio-light text-biblio-dark hover:bg-white px-5 py-2.5 rounded-full font-bold shadow-md transform hover:-translate-y-0.5 transition">
-                                <span>📋</span> Mes Demandes
+                                <i class="fa-solid fa-list-check"></i> <span>Mes Demandes</span>
                             </a>
                         {% endif %}
 
                         <a href="{{ path('app_cart_index') }}" class="flex items-center gap-2 bg-biblio-light text-biblio-dark hover:bg-white px-5 py-2.5 rounded-full font-bold shadow-md transform hover:-translate-y-0.5 transition" title="Voir mon panier">
-                            <span class="text-xl">🛒</span>
+                            <i class="fa-solid fa-cart-shopping text-xl"></i>
                             <span class="hidden sm:inline">Panier</span>
                             {% if app.session.get('panier')|length > 0 %}
                                 <span class="bg-biblio-dark text-biblio-light text-xs py-0.5 px-2 rounded-full ml-1">
@@ -81,17 +93,25 @@
                             <div class="relative ml-2">
                                 <button type="button" onclick="toggleUserMenu()" class="flex items-center gap-2 bg-[#6d462c] text-biblio-light hover:text-white hover:bg-[#5a3a24] rounded-full px-4 py-2 text-sm transition shadow border border-biblio-light/30" id="user-menu-button">
                                     <span class="font-bold truncate max-w-[100px]">{{ app.user.nom }}</span>
-                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                    <i class="fa-solid fa-caret-down"></i>
                                 </button>
 
-                                <div id="user-menu-dropdown" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-xl py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                                <div id="user-menu-dropdown" class="hidden origin-top-right absolute right-0 mt-2 w-52 rounded-xl shadow-2xl py-2 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 overflow-hidden">
                                     <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                                        <p class="text-xs text-gray-500 uppercase font-bold">Connecté en tant que</p>
+                                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">Connecté</p>
                                         <p class="text-sm font-bold text-biblio-dark truncate">{{ app.user.email }}</p>
                                     </div>
-                                    <a href="{{ path('app_logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold flex items-center gap-2">
-                                        <span>🚪</span> Déconnexion
+                                    
+                                    {# LIEN MON PROFIL #}
+                                    <a href="{{ path('app_profile') }}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-biblio-light hover:text-biblio-dark font-bold transition flex items-center gap-3">
+                                        <i class="fa-solid fa-user text-lg"></i> Mon Profil
                                     </a>
+
+                                    <div class="border-t border-gray-100 mt-1">
+                                        <a href="{{ path('app_logout') }}" class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50 font-bold transition flex items-center gap-3">
+                                            <i class="fa-solid fa-right-from-bracket text-lg"></i> Déconnexion
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         {% else %}
@@ -113,7 +133,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 w-full">
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
-                    <div class="rounded-lg p-4 mb-4 shadow-md flex items-center gap-3 animate-fade-in-down border-l-4
+                    <div class="rounded-xl p-4 mb-4 shadow-lg flex items-center gap-3 animate-bounce border-l-4
                         {% if label == 'success' %}bg-green-50 text-green-800 border-green-500{% elseif label == 'error' %}bg-red-50 text-red-800 border-red-500{% else %}bg-blue-50 text-blue-800 border-blue-500{% endif %}">
                         <span class="text-xl">
                             {% if label == 'success' %}✅{% elseif label == 'error' %}❌{% else %}ℹ️{% endif %}
@@ -129,11 +149,11 @@
             {% block body %}{% endblock %}
         </main>
 
-        {# --- FOOTER (Fond Marron #8B5E3C, Texte Beige #F5F1E6) --- #}
-        <footer class="bg-biblio-dark text-biblio-light py-8 mt-12">
+        {# --- FOOTER --- #}
+        <footer class="bg-biblio-dark text-biblio-light py-10 mt-12 border-t border-white/10">
             <div class="max-w-7xl mx-auto px-4 text-center">
-                <p class="font-medium text-lg">&copy; {{ "now"|date("Y") }} BiblioHub</p>
-                <p class="text-sm opacity-80 mt-2">La culture à portée de clic.</p>
+                <p class="font-black text-xl tracking-tighter">&copy; {{ "now"|date("Y") }} BiblioHub</p>
+                <p class="text-xs opacity-60 mt-2 uppercase tracking-widest font-bold">L'élégance du savoir</p>
             </div>
         </footer>
 
@@ -143,6 +163,7 @@
                 const menu = document.getElementById('user-menu-dropdown');
                 if(menu) menu.classList.toggle('hidden');
             }
+            // Ferme le menu si on clique ailleurs
             window.addEventListener('click', function(e) {
                 const button = document.getElementById('user-menu-button');
                 const menu = document.getElementById('user-menu-dropdown');

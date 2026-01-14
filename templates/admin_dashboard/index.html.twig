@@ -1,0 +1,162 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Admin | BiblioHub{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-[#F5F1E6] py-10 px-6">
+    <div class="max-w-7xl mx-auto">
+        
+        {# --- EN-TÊTE --- #}
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 pb-6 border-b border-[#8B5E3C]/20">
+            <div>
+                <h1 class="text-4xl font-black text-[#8B5E3C] uppercase tracking-tighter">Tableau de Bord</h1>
+                <p class="text-[#A67C52] font-bold italic mt-2">
+                    {# CORRECTION ICI : Utilisation de app.user #}
+                    Bonjour, {{ app.user ? app.user.nom : 'Administrateur' }} 👋
+                </p>
+            </div>
+            <a href="{{ path('app_livre_new') }}" class="mt-4 md:mt-0 bg-[#8B5E3C] hover:bg-[#A67C52] text-white px-8 py-3 rounded-2xl font-bold transition shadow-xl flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i> Ajouter un Livre
+            </a>
+        </div>
+
+        {# --- STATISTIQUES (CARTES) --- #}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            {# Livres #}
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-[#8B5E3C]/10 flex items-center gap-4 transition hover:-translate-y-1">
+                <div class="w-12 h-12 bg-[#F5F1E6] rounded-full flex items-center justify-center text-2xl">📚</div>
+                <div>
+                    <p class="text-[10px] font-black uppercase text-[#A67C52] tracking-widest">Total Livres</p>
+                    <p class="text-3xl font-black text-[#8B5E3C]">{{ stats.countLivres }}</p>
+                </div>
+            </div>
+
+            {# Membres #}
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-[#8B5E3C]/10 flex items-center gap-4 transition hover:-translate-y-1">
+                <div class="w-12 h-12 bg-[#F5F1E6] rounded-full flex items-center justify-center text-2xl">👥</div>
+                <div>
+                    <p class="text-[10px] font-black uppercase text-[#A67C52] tracking-widest">Membres</p>
+                    <p class="text-3xl font-black text-[#8B5E3C]">{{ stats.countUsers }}</p>
+                </div>
+            </div>
+
+            {# Demandes en Attente #}
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-[#8B5E3C]/10 flex items-center gap-4 transition hover:-translate-y-1">
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">⏳</div>
+                <div>
+                    <p class="text-[10px] font-black uppercase text-[#A67C52] tracking-widest">En Attente</p>
+                    <p class="text-3xl font-black text-[#8B5E3C]">{{ stats.countDemandes }}</p>
+                </div>
+            </div>
+
+            {# Emprunts Actifs #}
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-[#8B5E3C]/10 flex items-center gap-4 transition hover:-translate-y-1">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl">📖</div>
+                <div>
+                    <p class="text-[10px] font-black uppercase text-[#A67C52] tracking-widest">Emprunts Actifs</p>
+                    <p class="text-3xl font-black text-[#8B5E3C]">{{ stats.countEmprunts }}</p>
+                </div>
+            </div>
+        </div>
+
+        {# --- GRAPHIQUES --- #}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+            
+            {# Graphique Bâtons #}
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-[#8B5E3C]/5">
+                <h3 class="text-[#8B5E3C] font-black uppercase text-xs mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-simple"></i> Activité des Emprunts
+                </h3>
+                <div class="h-[300px] w-full relative">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+
+            {# Graphique Courbe #}
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-[#8B5E3C]/5">
+                <h3 class="text-[#8B5E3C] font-black uppercase text-xs mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-trend-up"></i> Croissance des Membres
+                </h3>
+                <div class="h-[300px] w-full relative">
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{# --- SCRIPTS --- #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Récupération sécurisée des données depuis le contrôleur
+    const labels = {{ chartData.months|json_encode|raw }};
+    const dataEmprunts = {{ chartData.emprunts|json_encode|raw }};
+    const dataUsers = {{ chartData.users|json_encode|raw }};
+
+    // Options communes pour le style "BiblioHub"
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(139, 94, 60, 0.05)' },
+                ticks: { color: '#A67C52', font: { weight: 'bold' } }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { color: '#8B5E3C', font: { weight: 'bold' } }
+            }
+        }
+    };
+
+    // 1. Bar Chart (Emprunts)
+    const barCtx = document.getElementById('barChart');
+    if (barCtx) {
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Emprunts',
+                    data: dataEmprunts,
+                    backgroundColor: '#8B5E3C',
+                    borderRadius: 6,
+                    barPercentage: 0.6
+                }]
+            },
+            options: commonOptions
+        });
+    }
+
+    // 2. Line Chart (Utilisateurs)
+    const lineCtx = document.getElementById('lineChart');
+    if (lineCtx) {
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Inscriptions',
+                    data: dataUsers,
+                    borderColor: '#A67C52',
+                    backgroundColor: 'rgba(166, 124, 82, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4, // Courbe lissée
+                    pointBackgroundColor: '#8B5E3C',
+                    pointBorderColor: '#fff',
+                    pointRadius: 5
+                }]
+            },
+            options: commonOptions
+        });
+    }
+});
+</script>
+{% endblock %}

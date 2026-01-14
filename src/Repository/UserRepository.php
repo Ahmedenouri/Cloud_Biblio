@@ -16,28 +16,32 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-    //    /**
-    //     * @return User[] Returns an array of User objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('u.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Compte les nouvelles inscriptions par mois pour l'année en cours
+     * @return array
+     */
+    public function countInscriptionsParMois(): array
+    {
+        // On récupère les inscriptions groupées par mois
+        // Note: Si votre champ n'est pas 'createdAt', remplacez-le ci-dessous
+        $results = $this->createQueryBuilder('u')
+            ->select('SUBSTRING(u.createdAt, 6, 2) as mois, COUNT(u.id) as total')
+            ->where('u.createdAt LIKE :year')
+            ->setParameter('year', date('Y') . '-%')
+            ->groupBy('mois')
+            ->orderBy('mois', 'ASC')
+            ->getQuery()
+            ->getResult();
 
-    //    public function findOneBySomeField($value): ?User
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        $data = array_fill(0, 12, 0);
+        
+        foreach ($results as $result) {
+            $index = (int)$result['mois'] - 1;
+            if ($index >= 0 && $index < 12) {
+                $data[$index] = (int)$result['total'];
+            }
+        }
+
+        return $data;
+    }
 }

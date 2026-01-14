@@ -1,27 +1,44 @@
 {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+    
+    {# Affichage des erreurs globales #}
     <div class="text-red-500 text-sm">{{ form_errors(form) }}</div>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="col-span-2">{{ form_row(form.titre) }}</div>
+        
+        {# TITRE (Prend toute la largeur) #}
+        <div class="col-span-2">
+            {{ form_row(form.titre) }}
+        </div>
+
+        {# CATEGORIE & PRIX #}
         <div>{{ form_row(form.categorie) }}</div>
         <div>{{ form_row(form.prix) }}</div>
         
-        <div class="col-span-2 bg-gray-50 p-4 rounded border">
-            {{ form_row(form.type) }}
-            <div class="mt-4">{{ form_row(form.stock) }}</div>
+        {# STOCK (On garde le bloc gris pour le mettre en valeur, mais sans le champ 'type') #}
+        <div class="col-span-2 bg-gray-50 p-4 rounded border border-gray-200">
+            {{ form_row(form.stock) }}
+            <p class="text-xs text-gray-500 mt-1">
+                Indiquez le nombre d'exemplaires physiques disponibles.
+            </p>
         </div>
 
-        <div class="col-span-2">{{ form_row(form.description) }}</div>
+        {# DESCRIPTION #}
+        <div class="col-span-2">
+            {{ form_row(form.description) }}
+        </div>
         
-        <div class="col-span-2 border-t pt-4 grid grid-cols-2 gap-4">
+        {# IMAGES & PDF #}
+        <div class="col-span-2 border-t border-gray-200 pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>{{ form_row(form.imageFile) }}</div>
             <div>{{ form_row(form.pdfFile) }}</div>
         </div>
     </div>
 
+    {# BOUTON ENREGISTRER #}
     <div class="pt-6 flex justify-end">
-        <button class="bg-[#8B5E3C] hover:bg-[#A67C52] text-white font-bold py-3 px-8 rounded shadow">
+        <button class="bg-[#8B5E3C] hover:bg-[#A67C52] text-white font-bold py-3 px-8 rounded shadow transition transform hover:-translate-y-0.5">
             {{ button_label|default('Enregistrer') }}
         </button>
     </div>
+
 {{ form_end(form) }}
